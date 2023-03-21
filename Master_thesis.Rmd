@@ -1,0 +1,311 @@
+---
+title: "Master thesis analysis"
+author: "Sara"
+date: "15/3/2023"
+output: html_document
+---
+```{r}
+data <- read.table("C:/Users/saral/OneDrive/Documentos/Bioinformatic/Community_analysis_R/ThesisCommunity_data/CommunityData3.csv", header = TRUE, sep = ";")
+
+library("magrittr")
+data<-data %>% na.omit()
+```
+###Plots over time distribution
+##Sites
+#Gavtshagen
+```{r Split the data or sorf data based on site}
+G_site <- data[data$Site=="G",]
+G<-subset(G_site, select = c(Site, Treatment, Year, week, reads, OTUs))
+G_natural<- G[G$Treatment=="N",]
+G_planted<- G[G$Treatment=="P",]
+
+library("ggplot2")
+ggplot()+
+  geom_line(data = G_planted, mapping = aes(week, reads), color="orange")+
+  geom_point(data = G_planted, mapping = aes(week, reads), color="orange")+
+  geom_line(data = G_natural, mapping = aes(week, reads), color="darkgreen")+
+  geom_point(data = G_natural, mapping = aes(week, reads), color="darkgreen")
+
+#M1
+#Split the data or sorf data based on site
+M1_site <- data[data$Site=="M1",]
+M1<-subset(M1_site, select = c(Site, Treatment, Year, week, reads, OTUs))
+M1_natural<- M1[M1$Treatment=="N",]
+M1_planted<- M1[M1$Treatment=="P",]
+
+ggplot()+
+  geom_line(data = M1_planted, mapping = aes(week, reads), color="orange")+
+  geom_point(data = M1_planted, mapping = aes(week, reads), color="orange")+
+  geom_line(data = M1_natural, mapping = aes(week, reads), color="darkgreen")+
+  geom_point(data = M1_natural, mapping = aes(week, reads), color="darkgreen")
+
+#M2. Split the data or sorf data based on site
+M2_site <- data[data$Site=="M2",]
+M2<-subset(M2_site, select = c(Site, Treatment, Year, week, reads, OTUs))
+M2_natural<- M2[M2$Treatment=="N",]
+M2_planted<- M2[M2$Treatment=="P",]
+
+ggplot()+
+  geom_line(data = M2_planted, mapping = aes(week, reads), color="orange")+
+  geom_point(data = M2_planted, mapping = aes(week, reads), color="orange")+
+  geom_line(data = M2_natural, mapping = aes(week, reads), color="darkgreen")+
+  geom_point(data = M2_natural, mapping = aes(week, reads), color="darkgreen")
+```
+
+###Venn diagram plots
+#Sites
+```{r}
+##Split the data or sorf data based on site
+G_site <- data[data$Site=="G",]
+g_otu<- subset(G_site, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs))
+G_site <- colSums(g_otu)
+
+M1_site <- data[data$Site=="M1",]
+M1_otu<- subset(M1_site, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs))
+M1_site <- colSums(M1_otu)
+
+M2_site <- data[data$Site=="M2",]
+M2_otu<- subset(M2_site, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs))
+M2_site <- colSums(M2_otu)
+
+#combine the three subdataframes
+library("dplyr")
+df <- cbind(G_site,M1_site,M2_site)
+
+df <- as.data.frame(df)
+
+df<-df[rowSums(df) !=0,]
+
+#make binary the dataframe
+G<-replace(df$G_site, df$G_site>0,1)
+
+M1<-replace(df$M1_site, df$M1_site>0,1)
+
+M2<-replace(df$M2_site, df$M2_site>0,1)
+
+gsum <-  sum(G) #just to have a look at the number
+
+m1sum <- sum(M1)
+
+m2sum <- sum(M2)
+ 
+df2 <- as.data.frame(cbind(G, M1, M2)) #only for 5 sets
+
+#Draw the diagram
+library(limma)
+
+a <- vennCounts(df2)
+
+vennDiagram(a)
+
+##Treatment, natural or planted
+#Split the data or sorf data based on site
+N_treat <- data[data$Treatment=="N",]
+N_otu<- subset(N_treat, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs))
+N_treat <- colSums(N_otu)
+
+P_treat <- data[data$Treatment=="P",]
+P_otu<- subset(P_treat, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs))
+P_treat <- colSums(P_otu)
+
+#combine the three subdataframes
+library("dplyr")
+df <- cbind(N_treat,P_treat)
+
+df <- as.data.frame(df)
+
+df<-df[rowSums(df) !=0,]
+
+#make binary the dataframe
+
+N<-replace(df$N_treat, df$N_treat>0,1)
+
+P<-replace(df$P_treat, df$P_treat>0,1)
+
+Nsum <-  sum(N) #just to have a look at the number
+
+Psum <- sum(P)
+
+df2 <- as.data.frame(cbind(N, P)) #only for 5 sets
+
+#Draw the diagram
+library(limma)
+
+b <- vennCounts(df2)
+
+vennDiagram(b)
+```
+
+```{r Year}
+##Split the data or sorf data based on site
+Y21 <- data[data$Year=="21",]
+Y21_otu<- subset(Y21, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs))
+Y21 <- colSums(Y21_otu)
+
+Y22<- data[data$Year=="22",]
+Y22_otu<- subset(Y22, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs))
+Y22 <- colSums(Y22_otu)
+
+#combine the three subdataframes
+library("dplyr")
+df <- cbind(Y21,Y22)
+
+df <- as.data.frame(df)
+
+df<-df[rowSums(df) !=0,]
+
+#make binary the dataframe
+
+Y21<-replace(df$Y21, df$Y21>0,1)
+
+Y22<-replace(df$Y22, df$Y22>0,1)
+
+y21sum <-  sum(Y21) #just to have a look at the number
+
+y22sum <- sum(Y22)
+
+df2 <- as.data.frame(cbind(Y21, Y22)) #only for 5 sets
+
+#Draw the diagram
+library(limma)
+
+c <- vennCounts(df2)
+
+vennDiagram(c)
+```
+
+###Normality and homocedasticity test
+```{r}
+#Histogram
+hist(all_data$reads)
+
+hist(all_data$OTUs)
+```
+##Contraste de hipótesis: normalidad
+
+shapiro.test(all_data$OTUs)
+shapiro.test(all_data$reads)
+
+##homocedasticidad
+fligner.test(OTUs~Treatment, all_data)
+
+fligner.test(OTUs~Site, all_data)
+
+fligner.test(OTUs~Year, all_data)
+
+fligner.test(OTUs~week, all_data)
+
+
+fligner.test(reads~Treatment, all_data)
+
+fligner.test(reads~Site, all_data)
+
+fligner.test(reads~Year, all_data)
+
+fligner.test(reads~week, all_data)
+
+#Mis datos son normales y homocedasticos. Heterodascity. The variability is equally distributed--> it doesn't matter the value of the residual or the real value.
+```
+
+###Richness test
+```{r}
+n_otu <- data[11:length(data)]
+
+n_meta <- subset(data[1:10])
+
+str(n_meta)
+
+ library(tidyverse) # great for averaging data and getting standard error for plotting
+  library(dplyr)
+
+
+n_meta$Treatment <- as.factor(n_meta$Treatment)
+n_meta$Site <- as.factor(n_meta$Site)
+n_meta$week <- as.factor(n_meta$week)
+n_meta$Year <- as.factor(n_meta$Year)
+
+all_data <- cbind(n_meta, n_otu)
+
+
+###Normalised data with read count size.Root square of each OTU per sample
+
+all_data<-cbind(all_data, sqrt(rowSums(n_otu)))
+colnames(all_data)[colnames(all_data) =="sqrt(rowSums(n_otu))"]<- "read.counts"
+
+#segun miguelito tienes que chequear las cosas despues
+
+#alfa-diversty --> Shannon
+library("vegan")
+shann <- diversity(n_otu, "shannon")
+simp <- diversity(n_otu, "simpson")
+
+
+####models
+##Treatment
+H<-lm(shann~read.counts+Treatment, data = all_data)
+H
+summary(H)
+
+
+one<- aov(H, data = all_data)
+
+summary(one)
+plot(one)
+
+##Site
+
+all_data$Site <- gsub("G", "0", all_data$Site)
+all_data$Site <- gsub("M1", "1", all_data$Site)
+all_data$Site <- gsub("M2", "2", all_data$Site)
+
+Hs<-lm(shann~all_data$read.counts + all_data$Site)
+Hs
+Hs<-lm(shann~all_data$read.counts + as.numeric(all_data$Site))
+summary(Hs)
+
+Hs<- aov(Hs, data = all_data)
+
+summary(Hs)
+
+##Year
+
+H<-lm(shann~read.counts+Year, data = all_data)
+H
+
+one<- aov(H, data = all_data)
+
+summary(one)
+
+##Week
+H<-lm(shann~read.counts+week, data = all_data)
+H
+
+one<- aov(H, data = all_data)
+
+summary(one)
+
+
+####Beta diversity.
+#I need to transform the data with Hellinger transformation
+library("labdsv")
+hell<-hellinger(n_otu)
+
+##Treatment
+bd<-adonis2(hell~read.counts+Treatment, data = all_data)
+bd
+
+##Site
+bd<-adonis2(hell~read.counts+Site, data = all_data)
+bd
+
+##Year
+
+bd<-adonis2(hell~read.counts+Year, data = all_data)
+bd
+
+##Week
+bd<-adonis2(hell~read.counts+week, data = all_data)
+bd
+```
+
+

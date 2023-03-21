@@ -15,7 +15,6 @@ all_data <- read.table("C:/Users/saral/OneDrive/Documentos/Bioinformatic/Communi
 library(vegan)
 ```  
 ##Rarefy you data
-
 - to estimate whether the amount of sequenced samples for each site was sufficient to cover all the OTUs and so to accurately estimate species richness
 
 ```{r}

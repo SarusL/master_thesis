@@ -1,0 +1,34 @@
+
+---
+title: "Rarefaction_curves"
+author: "Sara López"
+date: "2023-02-09"
+output: html_document
+---
+```{r}
+all_data <- read.table("C:/Users/saral/OneDrive/Documentos/Bioinformatic/Community_analysis_R/ThesisCommunity_data/CommunityData3.csv", header = TRUE, sep = ";")
+```
+
+```{r}
+  library(tidyverse) # great for averaging data and getting standard error for plotting
+  library(dplyr)
+library(vegan)
+```  
+##Rarefy you data
+
+- to estimate whether the amount of sequenced samples for each site was sufficient to cover all the OTUs and so to accurately estimate species richness
+
+```{r}
+#compare x and y
+all_data<-all_data %>% na.omit()
+all_otu <- all_data[11:length(all_data)]
+   
+S_all <- specnumber(all_otu)  #observed number of species per sample
+raremax <- min(rowSums(all_otu))
+Srare <- rarefy(all_otu, raremax)
+```
+
+
+```{r}
+plot(S_all, Srare, main="Sample", xlab = "Observed No. of Species", ylab = "Rarefied No. of Species")
+```

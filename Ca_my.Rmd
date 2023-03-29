@@ -1,0 +1,91 @@
+---
+title: "CA"
+author: "Sara Lopez Fernandez"
+date: "2023-03-22"
+output: html_document
+---
+```{r}
+data <- read.table("C:/Users/salz0002/Documents/R/CommunityData4(less).csv", header = TRUE, sep = ",")
+
+library("magrittr")
+
+data<-data %>% na.omit()
+```
+
+```{r}
+data$Site <- as.factor(data$Site)
+
+data$Treatment <- as.factor(data$Treatment)
+
+data$Year <- as.factor(data$Year)
+
+data$week <- as.factor(data$week)
+
+#str(all_data)
+```
+
+```{r deleting columns with 0}
+library(factoextra)
+library(ca)
+
+#####Cosa con miguelito. Tengo columnas con 0 asique me da problemitas en el CA y esas cosas
+
+n_otu<- data[11:length(data)]
+n_otu2 <- n_otu[, colSums(n_otu != 0) > 0]
+
+final<-cbind(data[,1:10],n_otu2)
+```
+```{r selecting the variable columns}
+final<-final[,-1]
+final<-final[,-5]
+final<-final[,-6]
+final<-final[,-6]
+final<-final[,-6]
+View(final)
+```
+```{r getting coordinates for the ca}
+final.ca<-ca(n_otu2, scale.=TRUE)
+ca_dim1 <- fviz_contrib(final.ca, choice="col", axes=2, top = 20)
+ca_dim1[["plot_env"]][["data_sum"]][["name"]]
+ca_dim1
+```
+```{r}
+###Distintas formas de hacer el CA
+ca1<-fviz_ca_row(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+ca2<- fviz_ca_col(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+ca3<-fviz_ca_col(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+ca4<-fviz_ca_biplot(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+ca5<-fviz_ca(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+
+```
+
+```{r without outliers}
+new_data<-data[-c(48,70),]
+```
+```{r}
+n_otu<- new_data[11:length(new_data)]
+n_otu2 <- n_otu[, colSums(n_otu != 0) > 0]
+
+final<-cbind(new_data[,1:10],n_otu2)
+```
+```{r selecting the variable columns}
+final<-final[,-1]
+final<-final[,-5]
+final<-final[,-6]
+final<-final[,-6]
+final<-final[,-6]
+```
+```{r getting coordinates for the ca}
+final.ca<-ca(n_otu2, scale.=TRUE)
+ca_dim1 <- fviz_contrib(final.ca, choice="col", axes=2, top = 20)
+ca_dim1[["plot_env"]][["data_sum"]][["name"]]
+ca_dim1
+```
+```{r}
+ca6<-fviz_ca_row(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+ca7<- fviz_ca_col(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+
+```
+
+
+

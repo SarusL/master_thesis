@@ -1,0 +1,155 @@
+---
+title: "Pair-wise: preparar data"
+output: html_notebook
+---
+
+```{r}
+data <- read.table("C:/Users/salz0002/Documents/R/CommunityData4(less).csv", header = TRUE, sep = ",")
+
+library("magrittr")
+
+data<-data %>% na.omit()
+
+data$Treatment <- as.factor(data$Treatment)
+
+data$Year <- as.factor(data$Year)
+
+data$week <- as.factor(data$week)
+
+n_otu<-data[,11:length(data)]
+data<-cbind(data, sqrt(rowSums(n_otu)))
+colnames(data)[colnames(data) =="sqrt(rowSums(n_otu))"]<- "read.counts"
+```
+
+```{r} 
+##split the info en sitios
+##G
+G_site <- data[data$Site=="G",]
+g_site<- subset(G_site, select=-c(Tag, Site, Sample, Info, Time_point))
+#Subdata split by year
+g_21<- g_site[g_site$Year=="21",]
+g_22<- g_site[g_site$Year=="22",]
+```
+```{r}
+##only gavstahagen and 21
+g_21t<-g_21[!(g_21$week=="8"| g_21$week=="12" | g_21$week=="18"),]
+
+g21t_otu <- g_21t[,6:837]#tabla otu para la riqueza
+g21t_meta <- g_21t[,c(1,2,3,838)]
+
+library("vegan")
+
+g21tb<- cbind(g21t_meta,g21t_otu)
+shann_g21tb_otu <- diversity(g21tb[,5:836], "shannon")
+```
+```{r}
+test1<- aov(shann_g21tb_otu ~ read.counts + week, data = g21tb)
+summary(test1)
+```
+```{r}
+#Gavstahagen and 22
+g_22<- g_site[g_site$Year=="22",] #cambio el codigo de las semanas para emparejar grupos sueltos
+week_code = c(2,6,1,4,5,2,3,4,3,6,5)
+g_22$week_code<-week_code
+```
+```{r}
+g22_otu <- g_22[6:836]#OJO, columna 837 tiene 0 reads.tabla otu para la riqueza
+g22_meta <- g_22[,c(1,2,3,838, 839)]
+
+g22tb<- cbind(g22_meta,g22_otu)
+shann_g22 <- diversity(g22tb[,6:836], "shannon")
+```
+```{r}
+test2<- aov(shann_g22 ~ read.counts + week_code, data = g22tb)
+summary(test2)
+```
+
+
+```{r}
+#M1
+M1_site <- data[data$Site=="M1",]
+m1_site<- subset(M1_site, select=-c(Tag, Site, Sample, Info, Time_point))
+#Subdata split by year
+m1_21<- m1_site[m1_site$Year=="21",]
+m1_22<- m1_site[m1_site$Year=="22",]
+```
+```{r}
+##only m1 and 21
+m1_21t<-m1_21[!(m1_21$week=="4"| m1_21$week=="6"),]
+m121_otu <- m1_21t[,6:837]#tabla otu para la riqueza
+m121_meta <- m1_21t[,c(1,2,3,838)]
+
+```
+```{r}
+m121tb<- cbind(m121_meta,m121_otu)
+shann_m121 <- diversity(m121tb[,5:836], "shannon")
+```
+```{r}
+test3<- aov(shann_m121 ~ read.counts + week, data = m121tb)
+summary(test3)
+```
+```{r}
+##only m1 and 22
+m1_22t<-m1_22[!(m1_22$week=="7"| m1_22$week=="2"),]
+week_code = c(4,1,3,3,2,2,5,4,1,5)
+m1_22t$week_code<-week_code
+
+m122_otu <- m1_22t[,6:837]#tabla otu para la riqueza
+m122_meta <- m1_22t[,c(1,2,3,838,839)]
+```
+```{r}
+m122tb<- cbind(m122_meta,m122_otu)
+shann_m122 <- diversity(m122tb[,6:837], "shannon")
+```
+```{r}
+test4<- aov(shann_m122 ~ read.counts + week_code, data = m122tb)
+summary(test4)
+```
+
+```{r}
+#M2
+M2_site <- data[data$Site=="M2",]
+m2_site<- subset(M2_site, select=-c(Tag, Site, Sample, Info, Time_point))
+#Subdata split by year
+m2_21<- m2_site[m2_site$Year=="21",]
+m2_22<- m2_site[m2_site$Year=="22",]
+```
+```{r}
+##only m2 and 21
+m2_21t<-m2_21[!(m2_21$week=="3"),]
+
+week.code= c(2,3,5,5,4,4,2,1,1,3)
+m2_21t$week_code<-week_code
+
+m221_otu <- m2_21t[,6:837]#tabla otu para la riqueza
+m221_meta <- m2_21t[,c(1,2,3,838, 839)]
+m221tb<- cbind(m221_meta,m221_otu)
+```
+```{r}
+shann_m221 <- diversity(m221tb[,6:837], "shannon")
+```
+```{r}
+test5<- aov(shann_m221 ~ read.counts + week.code, data = m221tb)
+summary(test5)
+```
+```{r}
+#M2 and 22
+
+m2_22t<-m2_22[!(m2_22$week=="2"),]
+
+week.code= c(3,2,2,1,3,4,5,5,4,1)
+m2_22t$week_code<-week_code
+
+```
+```{r}
+m222_otu <- m2_22t[,6:837]#tabla otu para la riqueza
+m222_meta <- m2_22t[,c(1,2,3,838, 839)]
+m222tb<- cbind(m222_meta,m222_otu)
+```
+```{r}
+shann_m222 <- diversity(m222tb[,6:837], "shannon")
+```
+```{r}
+test5<- aov(shann_m222 ~ read.counts + week.code, data = m222tb)
+summary(test5)
+```

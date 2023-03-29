@@ -1,0 +1,237 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+data <- read.table("C:/Users/salz0002/Documents/R/CommunityData4(less).csv", header = TRUE, sep = ",")
+
+library("magrittr")
+
+data<-data %>% na.omit()
+
+data$Treatment <- as.factor(data$Treatment)
+
+data$Year <- as.factor(data$Year)
+
+data$week <- as.factor(data$week)
+
+```
+
+```{r}
+#G and natural
+G_site <- data[data$Site=="G",]##Split the data or sorf data based on site
+g_otu<- subset(G_site, select=-c(Tag, Site, Sample, Info, Time_point))
+g_table<-subset(g_otu, select = -c(6:length(g_otu)))
+
+G_natural <- g_table[g_table$Treatment=="N",]#seleccionar natural
+
+ G_natural2 <-ddply(G_natural[,3:5], .(week), summarize, mean_reads=mean(reads))
+ G_natural3 <-ddply(G_natural[,3:5], .(week), summarize, mean_OTUs=mean(OTUs))
+ G_natural_fancy <- merge(G_natural2, G_natural3)
+ 
+ 
+silly_vector <- rep("N", 8)
+ G_natural_fancy <- cbind(silly_vector, G_natural_fancy)
+```
+```{r}
+totalGN_reads<- sum(G_natural_fancy$mean_reads)#relative abundance for reads
+rel_abundance<- G_natural_fancy$mean_reads/totalGN_reads
+abundance_readsGN<- rel_abundance*100
+
+totalGN_otus<-sum(G_natural_fancy$mean_OTUs)
+otu_abun_GN<- G_natural_fancy$mean_OTUs/totalGN_otus
+otu_GN_per<-otu_abun_GN*100
+
+G_natural_real<-cbind(G_natural_fancy, abundance_readsGN, otu_GN_per)
+```
+
+```{r}
+library(ggplot2)
+ggp<-ggplot(G_natural_real)+
+  geom_bar(aes(x=week, y=abundance_readsGN), stat = "identity", fill="cyan",colour="#006000")+
+  geom_point(aes(x=week, y=otu_GN_per),color="red", size=2)+
+  geom_line(aes(x=week, y=otu_GN_per, group=1), stat="identity",color="blue", size=2 )+
+  labs(title = "Relative abundance of natural regenerated seedlings in Gåvstahagen", x="weeks", y ="Relative abundance(%)")
+ggp
+
+```
+```{r}
+#G and Planted 
+G_plant <- g_table[g_table$Treatment=="P",]
+ G_plant2 <-ddply(G_plant[,3:5], .(week), summarize, mean_reads=mean(reads))
+ G_plant3 <-ddply(G_plant[,3:5], .(week), summarize, mean_OTUs=mean(OTUs))
+ G_plant_fancy <- merge(G_plant2, G_plant3)
+
+silly_vector <- rep("P", 8)
+ G_plant_fancy <- cbind(silly_vector, G_plant_fancy)
+```
+```{r}
+totalGN_reads<- sum(G_plant_fancy$mean_reads)#relative abundance for reads
+rel_abundance<- G_plant_fancy$mean_reads/totalGN_reads
+abundance_readsGN<- rel_abundance*100
+
+totalGN_otus<-sum(G_plant_fancy$mean_OTUs)
+otu_abun_GN<- G_plant_fancy$mean_OTUs/totalGN_otus
+otu_GN_per<-otu_abun_GN*100
+
+G_plant_real<-cbind(G_plant_fancy, abundance_readsGN, otu_GN_per)
+```
+
+```{r}
+ggp<-ggplot(G_plant_real)+
+  geom_bar(aes(x=week, y=abundance_readsGN), stat = "identity", fill="cyan",colour="#006000")+
+  geom_point(aes(x=week, y=otu_GN_per),color="red", size=2)+
+  geom_line(aes(x=week, y=otu_GN_per, group=1), stat="identity",color="blue", size=2 )+
+  labs(title = "Relative abundance of planted regenerated seedlings in Gåvstahagen", x="weeks", y ="Relative abundance(%)")
+ggp
+
+```
+
+
+
+```{r}
+#M1 and N
+M1_site <- data[data$Site=="M1",]##Split the data or sorf data based on site
+m1_otu<- subset(M1_site, select=-c(Tag, Site, Sample, Info, Time_point))
+m1_table<-subset(m1_otu, select = -c(6:length(m1_otu)))
+
+M1_natural <- m1_table[m1_table$Treatment=="N",]#seleccionar natural
+
+M1_natural2 <-ddply(M1_natural[,3:5], .(week), summarize, mean_reads=mean(reads))
+ M1_natural3 <-ddply(M1_natural[,3:5], .(week), summarize, mean_OTUs=mean(OTUs))
+ M1_natural_fancy <- merge(M1_natural2, M1_natural3)
+ 
+silly_vector <- rep("N", 11)
+M1_natural_fancy <- cbind(silly_vector, M1_natural_fancy)
+```
+```{r}
+totalGN_reads<- sum(M1_natural_fancy$mean_reads)#relative abundance for reads
+rel_abundance<- M1_natural_fancy$mean_reads/totalGN_reads
+abundance_readsGN<- rel_abundance*100
+
+totalGN_otus<-sum(M1_natural_fancy$mean_OTUs)
+otu_abun_GN<- M1_natural_fancy$mean_OTUs/totalGN_otus
+otu_GN_per<-otu_abun_GN*100
+
+M1_natural_real<-cbind(M1_natural_fancy, abundance_readsGN, otu_GN_per)
+```
+
+```{r}
+
+ggp<-ggplot(M1_natural_real)+
+  geom_bar(aes(x=week, y=abundance_readsGN), stat = "identity", fill="cyan",colour="#006000")+
+  geom_point(aes(x=week, y=otu_GN_per),color="red", size=2)+
+  geom_line(aes(x=week, y=otu_GN_per, group=1), stat="identity",color="blue", size=2 )+
+  labs(title = "Relative abundance of natural regenerated seedlings in Marielund 1", x="weeks", y ="Relative abundance(%)")
+ggp
+```
+```{r}
+#M1 and P
+M1_site <- data[data$Site=="M1",]##Split the data or sorf data based on site
+m1_otu<- subset(M1_site, select=-c(Tag, Site, Sample, Info, Time_point))
+m1_table<-subset(m1_otu, select = -c(6:length(m1_otu)))
+
+M1_plant <- m1_table[m1_table$Treatment=="P",]#seleccionar natural
+
+M1_plant2 <-ddply(M1_plant[,3:5], .(week), summarize, mean_reads=mean(reads))
+ M1_plant3 <-ddply(M1_plant[,3:5], .(week), summarize, mean_OTUs=mean(OTUs))
+ M1_plant_fancy <- merge(M1_plant2, M1_plant3)
+
+silly_vector <- rep("P", 8)
+M1_plant_fancy <- cbind(silly_vector, M1_plant_fancy)
+```
+```{r}
+totalGN_reads<- sum(M1_plant_fancy$mean_reads)#relative abundance for reads
+rel_abundance<- M1_plant_fancy$mean_reads/totalGN_reads
+abundance_readsGN<- rel_abundance*100
+
+totalGN_otus<-sum(M1_plant_fancy$mean_OTUs)
+otu_abun_GN<- M1_plant_fancy$mean_OTUs/totalGN_otus
+otu_GN_per<-otu_abun_GN*100
+
+M1_plant_real<-cbind(M1_plant_fancy, abundance_readsGN, otu_GN_per)
+```
+
+```{r}
+
+ggp<-ggplot(M1_plant_real)+
+  geom_bar(aes(x=week, y=abundance_readsGN), stat = "identity", fill="cyan",colour="#006000")+
+  geom_point(aes(x=week, y=otu_GN_per),color="red", size=2)+
+  geom_line(aes(x=week, y=otu_GN_per, group=1), stat="identity",color="blue", size=2 )+
+  labs(title = "Relative abundance of planted regenerated seedlings in Marielund 1", x="weeks", y ="Relative abundance(%)")
+ggp
+```
+
+```{r}
+#M2 and P
+M2_site <- data[data$Site=="M2",]##Split the data or sorf data based on site
+m2_otu<- subset(M2_site, select=-c(Tag, Site, Sample, Info, Time_point))
+m2_table<-subset(m2_otu, select = -c(6:length(m2_otu)))
+
+M2_plant <- m2_table[m2_table$Treatment=="P",]#seleccionar natural
+
+M2_plant2 <-ddply(M2_plant[,3:5], .(week), summarize, mean_reads=mean(reads))
+ M2_plant3 <-ddply(M2_plant[,3:5], .(week), summarize, mean_OTUs=mean(OTUs))
+ M2_plant_fancy <- merge(M2_plant2, M2_plant3)
+ 
+silly_vector <- rep("P", 7)
+M2_plant_fancy <- cbind(silly_vector, M2_plant_fancy)
+```
+```{r}
+totalGN_reads<- sum(M2_plant_fancy$mean_reads)#relative abundance for reads
+rel_abundance<- M2_plant_fancy$mean_reads/totalGN_reads
+abundance_readsGN<- rel_abundance*100
+
+totalGN_otus<-sum(M2_plant_fancy$mean_OTUs)
+otu_abun_GN<- M2_plant_fancy$mean_OTUs/totalGN_otus
+otu_GN_per<-otu_abun_GN*100
+
+M2_plant_real<-cbind(M2_plant_fancy, abundance_readsGN, otu_GN_per)
+```
+
+```{r}
+
+ggp<-ggplot(M2_plant_real)+
+  geom_bar(aes(x=week, y=abundance_readsGN), stat = "identity", fill="cyan",colour="#006000")+
+  geom_point(aes(x=week, y=otu_GN_per),color="red", size=2)+
+  geom_line(aes(x=week, y=otu_GN_per, group=1), stat="identity",color="blue", size=2 )+
+  labs(title = "Relative abundance of planted regenerated seedlings in Marielund 2", x="weeks", y ="Relative abundance(%)")
+ggp
+```
+```{r}
+#M2 and N
+M2_site <- data[data$Site=="M2",]##Split the data or sorf data based on site
+m2_otu<- subset(M2_site, select=-c(Tag, Site, Sample, Info, Time_point))
+m2_table<-subset(m2_otu, select = -c(6:length(m2_otu)))
+
+M2_natural <- m2_table[m2_table$Treatment=="N",]#seleccionar natural
+
+M2_natural2 <-ddply(M2_natural[,3:5], .(week), summarize, mean_reads=mean(reads))
+ M2_natural3 <-ddply(M2_natural[,3:5], .(week), summarize, mean_OTUs=mean(OTUs))
+ M2_natural_fancy <- merge(M2_natural2, M2_natural3)
+ 
+silly_vector <- rep("P", 9)
+M2_natural_fancy <- cbind(silly_vector, M2_natural_fancy)
+```
+```{r}
+totalGN_reads<- sum(M2_natural_fancy$mean_reads)#relative abundance for reads
+rel_abundance<- M2_natural_fancy$mean_reads/totalGN_reads
+abundance_readsGN<- rel_abundance*100
+
+totalGN_otus<-sum(M2_natural_fancy$mean_OTUs)
+otu_abun_GN<- M2_natural_fancy$mean_OTUs/totalGN_otus
+otu_GN_per<-otu_abun_GN*100
+
+M2_natural_real<-cbind(M2_natural_fancy, abundance_readsGN, otu_GN_per)
+```
+
+```{r}
+
+ggp<-ggplot(M2_natural_real)+
+  geom_bar(aes(x=week, y=abundance_readsGN), stat = "identity", fill="cyan",colour="#006000")+
+  geom_point(aes(x=week, y=otu_GN_per),color="red", size=2)+
+  geom_line(aes(x=week, y=otu_GN_per, group=1), stat="identity",color="blue", size=2 )+
+  labs(title = "Relative abundance of natural regenerated seedlings in Marielund 2", x="weeks", y ="Relative abundance(%)")
+ggp
+```

@@ -1,0 +1,92 @@
+---
+title: "Pairwise for real"
+author: "Sara Lopez Fernandez"
+date: "2023-03-29"
+output: html_document
+---
+
+```{r}
+data <- read.table("C:/Users/salz0002/Documents/R/Transdata.csv", header = TRUE, sep = ",")
+
+library("magrittr")
+
+data<-data %>% na.omit()
+```
+
+```{r}
+data$Site <- as.factor(data$Site)
+data$Treatment <- as.factor(data$Treatment)
+
+data$Year <- as.factor(data$Year)
+
+data$week <- as.factor(data$week)
+
+data$PairT<-as.factor(data$PairT)
+data$PairY<- as.factor(data$PairY)
+```
+```{r}
+n_otu<-data[,13:length(data)]
+data<-cbind(data, sqrt(rowSums(n_otu)))
+colnames(data)[colnames(data) =="sqrt(rowSums(n_otu))"]<- "read.counts"
+meta<-data[,c(3:5,7,9,10,834)]
+```
+
+```{r}
+library("vegan")
+
+tb<- cbind(meta,n_otu)
+
+shanntb <- diversity(tb[,8:828], "shannon")
+```
+
+```{r}
+test1<- aov(shanntb ~ read.counts + PairT, data = tb)
+summary(test1)
+```
+
+```{r}
+test2<- aov(shanntb ~ read.counts + PairY, data = tb)
+summary(test2)
+```
+
+```{r}
+#post hoc
+pairwise.t.test(shanntb, tb$PairY, p.adjust.method = "bonferroni")
+```
+```{r}
+TukeyHSD(test2, which = "PairY", conf.level = 0.95)
+```
+```{r}
+#anova de todo
+anova_fin <- aov(shanntb ~ read.counts + Site + Treatment, data=tb)
+
+#Binomial negativa, lo de esta gente
+tb$Site <- gsub("G", "0", tb$Site)
+tb$Site <- gsub("M1", "1", tb$Site)
+tb$Site <- gsub("M2", "2", tb$Site)
+
+tb$Treatment <- gsub("P", "1", tb$Treatment)
+tb$Treatment <- gsub("N", "2", tb$Treatment)
+
+tb$Site <- as.numeric(tb$Site)
+tb$Treatment <- as.numeric(tb$Treatment)
+
+m1 <- glm.nb(shanntb ~ read.counts + Site + Treatment, data=tb)
+
+Test.results <- anova(m1)
+```
+
+```{r glm2}
+#glm.nb con todo
+m2 <- glm.nb(shanntb ~ read.counts + Site + Treatment+week+Year, data=tb)
+
+Test.results2 <- anova(m2)
+Test.results2
+```
+```{r glm2}
+#glm.nb con todo
+m3 <- glm.nb(shanntb ~ read.counts + Site + Treatment+week+Year+PairY+PairT, data=tb)
+
+Test.results3 <- anova(m3)
+Test.results3
+```

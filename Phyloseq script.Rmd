@@ -1,0 +1,71 @@
+---
+title: "Phyloseq tutorial"
+author: "Sara Lopez Fernandez"
+date: "2023-04-11"
+output: html_document
+---
+
+#Importing taxa and all data files
+```{r}
+taxa_data <- read.table("C:/Users/salz0002/Documents/R/Communityanalysis/Taxa_OTU.csv", header = TRUE, sep = ",")
+
+data <- read.table("C:/Users/salz0002/Documents/R/Transdata.csv", header = TRUE, sep = ",")#less OTUs and no outliers
+```
+
+##Preparing the otu_table and the sample_table from all data file
+```{r data preparation}
+#select only the OTUs
+otutb<-data[13:length(data)]
+#transpose otu to stop the error dowstream with phyloseq
+otu_transposed<-t(otutb)
+#sample names in the otu table
+colnames(otu_transposed)<-paste0("Sample", 1:ncol(otu_transposed))
+
+#select only the variables information
+samtb<-subset(data, select = c(Sample, Site, Treatment, Year, week, reads, OTUs))
+#adding sample names, same as otu table
+rownames(samtb)<- paste0("Sample", 1:nrow(samtb))
+```
+```{r prepare taxa dataframe}
+#stablish the scata name as the row name similar to the otu table
+rownames(taxa_data)<- taxa_data$OTU
+taxa_data$OTU <-NULL
+print(taxa_data)
+
+taxa_matrix<-as.matrix(taxa_data, dimnames=TRUE)
+```
+
+
+```{r prepare data to phyloseq}
+
+library("phyloseq")
+OTU = otu_table(otu_transposed, taxa_are_rows = TRUE)
+TAX = tax_table(taxa_matrix)
+SAM = sam_data(samtb)
+OTU
+TAX
+```
+```{r bind all the data files}
+all = phyloseq(OTU, TAX, SAM)
+```
+```{r 1st plot}
+library(dplyr)
+library(ggplot2)
+sip<-plot_bar(all, fill = "class")+
+  scale_fill_manual(values= glasbey(n=20))+
+  theme_minimal()
+  
+```
+```{r heatmap}
+map<-plot_heatmap(all)
+```
+#Palets with different colors
+```{r}
+library(pals)
+
+labs=c('alphabet','alphabet2', 'glasbey','kelly','polychrome', 'stepped', 'stepped2', 'stepped3', 'tol', 'watlington')
+op=par(mar=c(0,5,3,1))
+
+pal.bands(alphabet(), alphabet2(), glasbey(), kelly(),polychrome(), stepped(), stepped2(), stepped3(), tol(), watlington(), labels=labs, show.names=FALSE)
+```
+

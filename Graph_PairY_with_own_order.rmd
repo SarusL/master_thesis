@@ -1,0 +1,119 @@
+---
+title: "Prueba de pairY order graph"
+author: "Sara Lopez Fernandez"
+date: "2023-04-18"
+output: html_document
+---
+#Para que apareciesen los pares ordenados los puse un codigo propio, introduciendo una nueva variable
+```{r}
+data <- read.table("C:/Users/salz0002/Documents/R/PairY_order_graph.csv", header = TRUE, sep = ",")
+
+taxa_data <- read.table("C:/Users/salz0002/Documents/R/Communityanalysis/Taxa_OTU.csv", header = TRUE, sep = ",")
+```
+#Delete the 0 in pairY_order
+```{r}
+data <- data[data$PairY_order != 0,]
+
+```
+*Preparing data as factors*
+```{r}
+data$Site <- as.factor(data$Site)
+data$Treatment <- as.factor(data$Treatment)
+
+data$Year <- as.factor(data$Year)
+
+data$week <- as.factor(data$week)
+
+data$PairT<-as.factor(data$PairT)
+data$PairY<- as.factor(data$PairY)
+
+data$PairY_order<- as.factor(data$PairY_order)
+```
+
+#Preparing the otu_table and the sample_table from all data file
+```{r data preparation}
+#select only the OTUs
+otutb<-data[13:length(data)]
+#transpose otu to stop the error dowstream with phyloseq
+otu_transposed<-t(otutb)
+#sample names in the otu table
+colnames(otu_transposed)<-paste0("Sample", 1:ncol(otu_transposed))
+```
+```{r}
+#select only the variables information
+samtb<-subset(data, select = c(Sample, Site, Treatment, Year, week,PairY, PairT, PairY_order, reads, OTUs))
+#adding sample names, same as otu table
+rownames(samtb)<- paste0("Sample", 1:nrow(samtb))
+```
+```{r prepare taxa dataframe}
+#stablish the scata name as the row name similar to the otu table
+rownames(taxa_data)<- taxa_data$OTU
+taxa_data$OTU <-NULL
+
+taxa_matrix<-as.matrix(taxa_data, dimnames=TRUE)
+```
+```{r prepare data to phyloseq}
+library("phyloseq")
+OTU = otu_table(otu_transposed, taxa_are_rows = TRUE)
+TAX = tax_table(taxa_matrix)
+SAM = sam_data(samtb)
+#OTU
+#TAX
+```
+```{r bind all the data files}
+all = phyloseq(OTU, TAX, SAM)
+```
+```{r}
+library(dplyr)
+library(ggplot2)
+library(pals)
+```
+```{r}
+library(forcats)
+filo<- phyloseq::plot_bar(all, x="PairY") #Luca gave to me this code
+plot1 <- ggplot(filo$data, aes(fill= fct_reorder(as.factor(class), Abundance), x=PairY_order, y = Abundance))+
+  geom_bar(stat = "identity", position = "fill")+
+  scale_fill_manual(values = glasbey(n=20))+
+  scale_y_continuous(name = "Relative abundance", labels = scales::percent)
+ 
+```
+#Select the 20 tops OTUs to family taxa level
+```{r select from taxa and otu table}
+otu_20<-head(otu_transposed, 20)
+taxa_20<-head(taxa_matrix, 20)
+```
+```{r insert in phyloseq}
+OTU_1=otu_table(otu_20, taxa_are_rows = TRUE)
+TAX_1=tax_table(taxa_20)
+```
+```{r bind everthing in a table}
+tb_20=phyloseq(OTU_1, TAX_1, SAM)
+```
+```{r relative abundance family-weeks}
+filo<- phyloseq::plot_bar(tb_20, x="PairY_order") #Luca gave to me this code
+plot2 <- ggplot(filo$data, aes(fill= fct_reorder(as.factor(family), Abundance), x=PairY_order, y = Abundance))+
+  geom_bar(stat = "identity", position = "fill")+
+  scale_fill_manual(values = glasbey(n=20))+
+  scale_y_continuous(name = "Relative abundance", labels = scales::percent)
+  
+plot2
+```
+```{r relative abundance genus-weeks}
+plot3 <- ggplot(filo$data, aes(fill= fct_reorder(as.factor(genus), Abundance), x=PairY_order, y = Abundance))+
+  geom_bar(stat = "identity", position = "fill")+
+  scale_fill_manual(values = glasbey(n=20))+
+  scale_y_continuous(name = "Relative abundance", labels = scales::percent)
+  
+plot3
+
+```
+```{r relative abundance taxa selection-weeks}
+plot4 <- ggplot(filo$data, aes(fill= fct_reorder(as.factor(Selection), Abundance), x=PairY_order, y = Abundance))+
+  geom_bar(stat = "identity", position = "fill")+
+  scale_fill_manual(values = glasbey(n=20))+
+  scale_y_continuous(name = "Relative abundance", labels = scales::percent)
+  
+plot4
+```
+
+

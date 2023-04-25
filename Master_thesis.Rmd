@@ -5,56 +5,16 @@ date: "15/3/2023"
 output: html_document
 ---
 ```{r}
-data <- read.table("C:/Users/saral/OneDrive/Documentos/Bioinformatic/Community_analysis_R/ThesisCommunity_data/CommunityData3.csv", header = TRUE, sep = ";")
+data <- read.table("C:/Users/salz0002/Documents/R/Transdata.csv", header = TRUE, sep = ",")
 
 library("magrittr")
+
 data<-data %>% na.omit()
 ```
-###Plots over time distribution
-##Sites
-#Gavtshagen
-```{r Split the data or sorf data based on site}
-G_site <- data[data$Site=="G",]
-G<-subset(G_site, select = c(Site, Treatment, Year, week, reads, OTUs))
-G_natural<- G[G$Treatment=="N",]
-G_planted<- G[G$Treatment=="P",]
 
-library("ggplot2")
-ggplot()+
-  geom_line(data = G_planted, mapping = aes(week, reads), color="orange")+
-  geom_point(data = G_planted, mapping = aes(week, reads), color="orange")+
-  geom_line(data = G_natural, mapping = aes(week, reads), color="darkgreen")+
-  geom_point(data = G_natural, mapping = aes(week, reads), color="darkgreen")
+#Venn diagram plots
 
-#M1
-#Split the data or sorf data based on site
-M1_site <- data[data$Site=="M1",]
-M1<-subset(M1_site, select = c(Site, Treatment, Year, week, reads, OTUs))
-M1_natural<- M1[M1$Treatment=="N",]
-M1_planted<- M1[M1$Treatment=="P",]
-
-ggplot()+
-  geom_line(data = M1_planted, mapping = aes(week, reads), color="orange")+
-  geom_point(data = M1_planted, mapping = aes(week, reads), color="orange")+
-  geom_line(data = M1_natural, mapping = aes(week, reads), color="darkgreen")+
-  geom_point(data = M1_natural, mapping = aes(week, reads), color="darkgreen")
-
-#M2. Split the data or sorf data based on site
-M2_site <- data[data$Site=="M2",]
-M2<-subset(M2_site, select = c(Site, Treatment, Year, week, reads, OTUs))
-M2_natural<- M2[M2$Treatment=="N",]
-M2_planted<- M2[M2$Treatment=="P",]
-
-ggplot()+
-  geom_line(data = M2_planted, mapping = aes(week, reads), color="orange")+
-  geom_point(data = M2_planted, mapping = aes(week, reads), color="orange")+
-  geom_line(data = M2_natural, mapping = aes(week, reads), color="darkgreen")+
-  geom_point(data = M2_natural, mapping = aes(week, reads), color="darkgreen")
-```
-
-###Venn diagram plots
-#Sites
-```{r}
+```{r Split data based on site}
 ##Split the data or sorf data based on site
 G_site <- data[data$Site=="G",]
 g_otu<- subset(G_site, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs))
@@ -174,14 +134,14 @@ c <- vennCounts(df2)
 vennDiagram(c)
 ```
 
-###Normality and homocedasticity test
-```{r}
-#Histogram
+```{r Normality and homocedasticity test}
+
 hist(all_data$reads)
 
 hist(all_data$OTUs)
 ```
-##Contraste de hipótesis: normalidad
+
+```{r Contraste de hipótesis: normalidad and homocedaticidad }
 
 shapiro.test(all_data$OTUs)
 shapiro.test(all_data$reads)
@@ -207,7 +167,102 @@ fligner.test(reads~week, all_data)
 #Mis datos son normales y homocedasticos. Heterodascity. The variability is equally distributed--> it doesn't matter the value of the residual or the real value.
 ```
 
-###Richness test
+
+#Plots over time distribution
+```{r}
+###Esto esta mal, no nos sirve para lo que queremos
+all_data<-subset(data, select = c(Site, Treatment, Year, week, reads, OTUs))
+natural<-all_data[all_data$Treatment=="N",]
+planted<-all_data[all_data$Treatment=="P",]
+
+all1<-ggplot()+
+  geom_line(data = planted, mapping = aes(week, reads), color="orange")+
+  geom_point(data = planted, mapping = aes(week, reads), color="orange")+
+  geom_line(data = natural, mapping = aes(week, reads), color="darkgreen")+
+  geom_point(data = natural, mapping = aes(week, reads), color="darkgreen")+
+  ggtitle ("All dataset")
+
+```
+
+##Sites
+```{r Split the data or sorf data based on site}
+#Gavtshagen
+G_site <- data[data$Site=="G",]
+G<-subset(G_site, select = c(Site, Treatment, Year, week, reads, OTUs))
+G_natural<- G[G$Treatment=="N",]
+G_planted<- G[G$Treatment=="P",]
+
+library("ggplot2")
+G<-ggplot()+
+  geom_line(data = G_planted, mapping = aes(week, reads), color="orange")+
+  geom_point(data = G_planted, mapping = aes(week, reads), color="orange")+
+  geom_line(data = G_natural, mapping = aes(week, reads), color="darkgreen")+
+  geom_point(data = G_natural, mapping = aes(week, reads), color="darkgreen")+
+  ggtitle ("Gåvtshagen")
+
+#M1
+#Split the data or sorf data based on site
+M1_site <- data[data$Site=="M1",]
+M1<-subset(M1_site, select = c(Site, Treatment, Year, week, reads, OTUs))
+M1_natural<- M1[M1$Treatment=="N",]
+M1_planted<- M1[M1$Treatment=="P",]
+
+M1<-ggplot()+
+  geom_line(data = M1_planted, mapping = aes(week, reads), color="orange")+
+  geom_point(data = M1_planted, mapping = aes(week, reads), color="orange")+
+  geom_line(data = M1_natural, mapping = aes(week, reads), color="darkgreen")+
+  geom_point(data = M1_natural, mapping = aes(week, reads), color="darkgreen")+
+  ggtitle ("Marielund 1")
+
+#M2. Split the data or sorf data based on site
+M2_site <- data[data$Site=="M2",]
+M2<-subset(M2_site, select = c(Site, Treatment, Year, week, reads, OTUs))
+M2_natural<- M2[M2$Treatment=="N",]
+M2_planted<- M2[M2$Treatment=="P",]
+
+M2<-ggplot()+
+  geom_line(data = M2_planted, mapping = aes(week, reads), color="orange")+
+  geom_point(data = M2_planted, mapping = aes(week, reads), color="orange")+
+  geom_line(data = M2_natural, mapping = aes(week, reads), color="darkgreen")+
+  geom_point(data = M2_natural, mapping = aes(week, reads), color="darkgreen")+
+  ggtitle ("Marielund 2")
+```
+
+#Histograms-->Normality
+```{r}
+h1<-hist(data$reads)
+
+h2<-hist(data$OTUs)
+```
+##Contraste de hipótesis: normalidad
+```{r}
+shapiro.test(data$OTUs)
+shapiro.test(data$reads)
+```
+
+##homocedasticidad
+```{r}
+fligner.test(OTUs~Treatment, data)
+
+fligner.test(OTUs~Site, data)
+
+fligner.test(OTUs~Year, data)
+
+fligner.test(OTUs~week, data)
+
+
+fligner.test(reads~Treatment, data)
+
+fligner.test(reads~Site, data)
+
+fligner.test(reads~Year, data)
+
+fligner.test(reads~week, data)###Mis datos son normales y homocedasticos
+##Heterodascity. The variability is equally distributed--> it doesn't matter the value of the residual or the real value.
+```
+
+
+#Diversity test with all the dataset
 ```{r}
 n_otu <- data[11:length(data)]
 
@@ -233,14 +288,25 @@ all_data<-cbind(all_data, sqrt(rowSums(n_otu)))
 colnames(all_data)[colnames(all_data) =="sqrt(rowSums(n_otu))"]<- "read.counts"
 
 #segun miguelito tienes que chequear las cosas despues
-
+```
+##Alfa-diversity
+```{r}
 #alfa-diversty --> Shannon
 library("vegan")
 shann <- diversity(n_otu, "shannon")
-simp <- diversity(n_otu, "simpson")
 
+all_data$Shannon<-shann #add a column with the shannon data
 
 ####models
+#all the variables
+H<-lm(shann~read.counts+Treatment+Site+Year+week, data = all_data)
+H
+one<- aov(H, data = all_data)
+
+summary(one)
+plot(one)
+```
+```{r Only treatment}
 ##Treatment
 H<-lm(shann~read.counts+Treatment, data = all_data)
 H
@@ -251,7 +317,8 @@ one<- aov(H, data = all_data)
 
 summary(one)
 plot(one)
-
+```
+```{r only site}
 ##Site
 
 all_data$Site <- gsub("G", "0", all_data$Site)
@@ -266,7 +333,8 @@ summary(Hs)
 Hs<- aov(Hs, data = all_data)
 
 summary(Hs)
-
+```
+```{r only year and weeks}
 ##Year
 
 H<-lm(shann~read.counts+Year, data = all_data)
@@ -283,14 +351,67 @@ H
 one<- aov(H, data = all_data)
 
 summary(one)
+```
+```{r post hoc alfa-diversity}
+##pairwise comparation post hoc alfa-diversity para weeks
+pairwise.t.test(shann, all_data$week, p.adj = "bonferroni")#bonferroni es exigente no salen cosas
+TDH<-data.frame(TukeyHSD(one, which = "week", conf.level = 0.95))##este me cae mejor salen signif. 
+```
 
-
+###Boxplot alfa-diversity
+```{r}
+bp<-boxplot(Shannon~Treatment, all_data, xlab = "Seedling type",
+   ylab = "Shannon index", main = "Alpha diversity based on seedling type")
+```
+```{r boxplot shannon-treatment}
+St<-boxplot(Shannon ~ Treatment, data = all_data, 
+   xlab = "Seedling type",
+   ylab = "Shannon index", 
+   main = "Alpha diversity based on the seedling type",
+   notch = TRUE, 
+   varwidth = TRUE, 
+   col = c("#00BA42", "#ED8141"))#,names = c("N","P")
+```
+```{r boxplot shannon-site}
+St<-boxplot(Shannon ~ Site, data = all_data, 
+   xlab = "Site",
+   ylab = "Shannon index", 
+   main = "Alpha diversity based on the site",
+   notch = TRUE,
+   varwidth = TRUE, 
+   col = c("#00BA42", "#ED8141", "#BF80FF"))#,names = c("N","P")
+```
+```{rboxplot shannon-year}
+St<-boxplot(Shannon ~ Year, data = all_data, 
+   xlab = "Year",
+   ylab = "Shannon index", 
+   main = "Alpha diversity based on the needle age",
+    notch = TRUE,
+   varwidth = TRUE, 
+   col = c("#00BA42", "#BF80FF"),
+   names = c("Y21","Y22"))
+```
+```{rboxplot shannon-week}
+St<-boxplot(Shannon ~ week, data = all_data, 
+   xlab = "Weeks",
+   ylab = "Shannon index", 
+   main = "Alpha diversity based on the exposure time",
+   varwidth = TRUE, 
+   col = c("lightgreen"))
+```
+##Beta diversity- the headmap is in the phyloseq script
+```{r beta diversity}
 ####Beta diversity.
 #I need to transform the data with Hellinger transformation
 library("labdsv")
 hell<-hellinger(n_otu)
 
-##Treatment
+#All variable
+bd<-adonis2(hell~read.counts+Treatment+Site+Year+week, data = all_data, method = "bray")
+bd
+```
+```{r}
+#Treatment
 bd<-adonis2(hell~read.counts+Treatment, data = all_data)
 bd
 
@@ -303,9 +424,12 @@ bd
 bd<-adonis2(hell~read.counts+Year, data = all_data)
 bd
 
+###pairwise.adonis--> post hoc 
 ##Week
 bd<-adonis2(hell~read.counts+week, data = all_data)
 bd
 ```
+
+
 
 

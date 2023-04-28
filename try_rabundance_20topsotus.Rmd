@@ -40,94 +40,7 @@ tax20 = ggplot(dfm, aes(x = week, fill = variable, y = value)) +
 #Relative abundance graph PairY
 ##Gavsta
 ```{r}
-G <- read.table("C:/Users/salz0002/Documents/R/GPairY_relabunda.csv", header = TRUE, sep = ",")
-```
-```{r}
-G$PairY <- factor(G$PairY, levels=G$PairY)
-```
-```{r}
-dfm= melt(G, na.rm = FALSE, value.name = "value")
-```
-
-
-```{r}
-colours=c("royalblue","brown2", "lightgreen", "magenta","seagreen","chocolate1", "cyan", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
-```
-
-```{r}
-tax20 = ggplot(dfm, aes(x = PairY, fill = variable, y = value)) + 
-    geom_bar(stat = "identity", colour = "black")+
-    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
-    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
-    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
-    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
-    scale_y_continuous(expand = c(0,0)) + 
-    labs(x = "Gavsta-Pair year over time", y = "Relative Abundance (%)", fill = "20 top OTUs") + 
-    scale_fill_manual(values = colours)
-    #ggtitle("Kilåmon")
-```
-##M1
-```{r}
-M1 <- read.table("C:/Users/salz0002/Documents/R/M1PairY_relabunda.csv", header = TRUE, sep = ",")
-```
-```{r}
-M1$OTUs <- factor(M1$OTUs, levels=M1$OTUs)
-```
-```{r}
-dfm= melt(M1, na.rm = FALSE, value.name = "value")
-```
-
-
-```{r}
-colours=c("royalblue","brown2", "lightgreen", "magenta","seagreen","chocolate1", "cyan", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
-```
-
-```{r}
-tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) + 
-    geom_bar(stat = "identity", colour = "black")+
-    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
-    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
-    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
-    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
-    scale_y_continuous(expand = c(0,0)) + 
-    labs(x = "M1-Pair year over time", y = "Relative Abundance (%)", fill = "20 top OTUs") + 
-    scale_fill_manual(values = colours)
-   
-```
-##M2
-```{r}
-M2 <- read.table("C:/Users/salz0002/Documents/R/M2PairY_relabunda.csv", header = TRUE, sep = ",")
-```
-```{r}
-M2$OTUs <- factor(M2$OTUs, levels=M2$OTUs)
-```
-```{r}
-dfm= melt(M2, na.rm = FALSE, value.name = "value")
-```
-
-
-```{r}
-colours=c("royalblue","brown2", "lightgreen", "magenta","seagreen","chocolate1", "cyan", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
-```
-
-```{r}
-tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) + 
-    geom_bar(stat = "identity", colour = "black")+
-    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
-    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
-    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
-    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
-    scale_y_continuous(expand = c(0,0)) + 
-    labs(x = "Pair year over time", y = "Relative Abundance (%)", fill = "20 top OTUs") + 
-    scale_fill_manual(values = colours)+
-  ggtitle("Marilund 2")
-   
-```
-#Relative abundance 20 tops taxa PairTreatment 
-##Gavsta 
-**Malll*
-```{r}
-G <- read.table("C:/Users/salz0002/Documents/R/GPairT_relabunda.csv", header = TRUE, sep = ",")
+G <- read.table("C:/Users/salz0002/Documents/R/Paired sample design/G_PairY.Ra.csv", header = TRUE, sep = ",")
 ```
 ```{r}
 G$OTUs <- factor(G$OTUs, levels=G$OTUs)
@@ -149,13 +62,13 @@ tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) +
     legend.text = element_text(size = 12, face = "bold", colour = "black"), 
     axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
     scale_y_continuous(expand = c(0,0)) + 
-    labs(x = "Pair treatment over time", y = "Relative Abundance (%)", fill = "20 top OTUs") + 
+    labs(x = "Pair year over time", y = "Relative Abundance (%)", fill = "20 most abundance OTUs") + 
     scale_fill_manual(values = colours)+
-  ggtitle("Gåvstahagen")
+    ggtitle("Gåvstahagen- Paired samples based on needle age")
 ```
 ##M1
 ```{r}
-M1 <- read.table("C:/Users/salz0002/Documents/R/M1PairT_relabunda.csv", header = TRUE, sep = ",")
+M1 <- read.table("C:/Users/salz0002/Documents/R/Paired sample design/M1_PairY.Ra.csv", header = TRUE, sep = ",")
 ```
 ```{r}
 M1$OTUs <- factor(M1$OTUs, levels=M1$OTUs)
@@ -177,14 +90,14 @@ tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) +
     legend.text = element_text(size = 12, face = "bold", colour = "black"), 
     axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
     scale_y_continuous(expand = c(0,0)) + 
-    labs(x = "Pair treatment over time", y = "Relative Abundance (%)", fill = "20 top OTUs") + 
+    labs(x = "Pair year over time", y = "Relative Abundance (%)", fill = "20 top OTUs") + 
     scale_fill_manual(values = colours)+
-  ggtitle("Marielund 1")
+    ggtitle("Marielund 1- Paired samples based on needle age")
    
 ```
 ##M2
 ```{r}
-M2 <- read.table("C:/Users/salz0002/Documents/R/M2PairT_relabunda.csv", header = TRUE, sep = ",")
+M2 <- read.table("C:/Users/salz0002/Documents/R/Paired sample design/M2_PairY.Ra.csv", header = TRUE, sep = ",")
 ```
 ```{r}
 M2$OTUs <- factor(M2$OTUs, levels=M2$OTUs)
@@ -206,8 +119,127 @@ tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) +
     legend.text = element_text(size = 12, face = "bold", colour = "black"), 
     axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
     scale_y_continuous(expand = c(0,0)) + 
-    labs(x = "Pair treatment over time", y = "Relative Abundance (%)", fill = "20 top OTUs") + 
+    labs(x = "Pair year over time", y = "Relative Abundance (%)", fill = "20 most abundance OTUs") + 
     scale_fill_manual(values = colours)+
-  ggtitle("Marilund 2")
+  ggtitle("Marilund 2-  Paired samples based on needle age")
    
 ```
+#Relative abundance 20 tops taxa PairTreatment 
+##Gavsta 
+**Malll*
+```{r}
+G <- read.table("C:/Users/salz0002/Documents/R/Paired sample design/G_PairT.Ra.csv", header = TRUE, sep = ",")
+```
+```{r}
+G$OTUs <- factor(G$OTUs, levels=G$OTUs)
+```
+```{r}
+dfm= melt(G, na.rm = FALSE, value.name = "value")
+```
+
+
+```{r}
+colours=c("royalblue","brown2", "lightgreen", "magenta","seagreen","chocolate1", "cyan", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
+```
+
+```{r}
+tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) + 
+    geom_bar(stat = "identity", colour = "black")+
+    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
+    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
+    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
+    scale_y_continuous(expand = c(0,0)) + 
+    labs(x = "Pair treatment over time", y = "Relative Abundance (%)", fill = "20 most abundance OTUs") + 
+    scale_fill_manual(values = colours)+
+  ggtitle("Gåvstahagen- Paired samples based on seedling type")
+```
+##M1
+```{r}
+M1 <- read.table("C:/Users/salz0002/Documents/R/Paired sample design/M1_PairT.Ra.csv", header = TRUE, sep = ",")
+```
+```{r}
+M1$OTUs <- factor(M1$OTUs, levels=M1$OTUs)
+```
+```{r}
+dfm= melt(M1, na.rm = FALSE, value.name = "value")
+```
+
+
+```{r}
+colours=c("royalblue","brown2", "lightgreen", "magenta","seagreen","chocolate1", "cyan", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
+```
+
+```{r}
+tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) + 
+    geom_bar(stat = "identity", colour = "black")+
+    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
+    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
+    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
+    scale_y_continuous(expand = c(0,0)) + 
+    labs(x = "Pair treatment over time", y = "Relative Abundance (%)", fill = "20 most abundance OTUs") + 
+    scale_fill_manual(values = colours)+
+  ggtitle("Marielund 1- Paired samples based on seedling type")
+   
+```
+##M2
+```{r}
+M2 <- read.table("C:/Users/salz0002/Documents/R/Paired sample design/M2_PairT.Ra.csv", header = TRUE, sep = ",")
+```
+```{r}
+M2$OTUs <- factor(M2$OTUs, levels=M2$OTUs)
+```
+```{r}
+dfm= melt(M2, na.rm = FALSE, value.name = "value")
+```
+
+
+```{r}
+colours=c("royalblue","brown2", "lightgreen", "magenta","seagreen","chocolate1", "cyan", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
+```
+
+```{r}
+tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) + 
+    geom_bar(stat = "identity", colour = "black")+
+    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
+    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
+    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
+    scale_y_continuous(expand = c(0,0)) + 
+    labs(x = "Pair treatment over time", y = "Relative Abundance (%)", fill = "20 most abundance OTUs") + 
+    scale_fill_manual(values = colours)+
+  ggtitle("Marilund 2- Paired samples based on seedling type")
+
+   
+```
+#Lifestyles over time
+
+```{r}
+dt <- read.table("C:/Users/salz0002/Documents/R/Lifestyle_relativeabundances.csv", header = TRUE, sep = ",")
+```
+```{r}
+dt$Weeks <- factor(dt$Weeks, levels=dt$Weeks)
+```
+```{r}
+dfm= melt(dt, na.rm = FALSE, value.name = "value")
+```
+
+
+```{r}
+colours=c("royalblue","cyan", "lightgreen", "magenta","seagreen","chocolate1", "plum4", "slategray4", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
+```
+
+```{r}
+tax20 = ggplot(dfm, aes(x = Weeks, fill = variable, y = value)) + 
+    geom_bar(stat = "identity", colour = "black")+
+    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
+    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
+    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
+    scale_y_continuous(expand = c(0,0)) + 
+    labs(x = "Lifest over time", y = "Relative Abundance (%)", fill = "Lifestyles") + 
+    scale_fill_manual(values = colours)
+
+```
+

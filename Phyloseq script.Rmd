@@ -12,7 +12,7 @@ taxa_data <- read.table("C:/Users/salz0002/Documents/R/Communityanalysis/Taxa_OT
 data <- read.table("C:/Users/salz0002/Documents/R/Transdata.csv", header = TRUE, sep = ",")#less OTUs and no outliers
 ```
 
-##Preparing the otu_table and the sample_table from all data file
+#Preparing the otu_table and the sample_table from all data file
 ```{r data preparation}
 #select only the OTUs
 otutb<-data[13:length(data)]
@@ -35,31 +35,49 @@ print(taxa_data)
 taxa_matrix<-as.matrix(taxa_data, dimnames=TRUE)
 ```
 
-
 ```{r prepare data to phyloseq}
-
 library("phyloseq")
 OTU = otu_table(otu_transposed, taxa_are_rows = TRUE)
 TAX = tax_table(taxa_matrix)
 SAM = sam_data(samtb)
-OTU
-TAX
+#OTU
+#TAX
 ```
 ```{r bind all the data files}
 all = phyloseq(OTU, TAX, SAM)
 ```
+
+#GRAPHICS
 ```{r 1st plot}
 library(dplyr)
 library(ggplot2)
+library(pals)
+```
+
+
+```{r 1st plot}
 sip<-plot_bar(all, fill = "class")+
   scale_fill_manual(values= glasbey(n=20))+
   theme_minimal()
-  
 ```
+#ALL GRAPH
 ```{r heatmap}
-map<-plot_heatmap(all)
+map<-plot_heatmap(all, distance = "bray", low = "#00BA42", high = "magenta")
 ```
-#Palets with different colors
+```{r Lucas heatmap}
+# distance heatmap (bray)
+braydist = phyloseq::distance(all, "bray")
+dist_df = melt(as.matrix(braydist))
+colnames(dist_df) <- c("Samples1", "Samples2", "Bray_Curtis")
+
+htmp_bray <- ggplot(dist_df, aes(Samples1, Samples2, fill = Bray_Curtis)) +
+  geom_tile()+
+  theme(axis.text.x = element_text(angle = -90, vjust = 0.5, hjust = 0)) +
+  xlab("Samples") + ylab("Samples")
+htmp_bray
+```
+
+##Palets with different colors
 ```{r}
 library(pals)
 
@@ -68,4 +86,101 @@ op=par(mar=c(0,5,3,1))
 
 pal.bands(alphabet(), alphabet2(), glasbey(), kelly(),polychrome(), stepped(), stepped2(), stepped3(), tol(), watlington(), labels=labs, show.names=FALSE)
 ```
+##Barplots
+```{r barplot class-week}
+week_plot<-plot_bar(all, x="week", fill = "class")+
+   geom_bar(stat = "identity")+
+  scale_fill_manual(values = glasbey(n=20))
+week_plot
+```
+
+
+```{r barplot class-variables}
+tre_plot<-plot_bar(all, x="Treatment", fill = "class")
+yr_plot<-plot_bar(all, x="Year", fill = "class")
+st_plot<-plot_bar(all, x="Site", fill = "class")
+```
+
+```{r relative abundance~selection in the graph}
+library(forcats)
+filo<- phyloseq::plot_bar(all, x="week") #Luca gave to me this code
+```
+```{r}
+collapsed_phyloseq <- taxglom(filo, "OTU")
+```
+
+```{r}
+filodata<-filo$data
+20_otu<-head(filodata, 20)
+```
+
+```{r select from taxa and otu table}
+#NOTA: tienes que hacer primero la abundancia realtiva para todo el dataset y luego elegir los 20 primeros clusters asi sabes que se mantiene la proporcianilidad en la grafica. 
+
+otu_20<-head(filo@otu_table[], 20)
+taxa_20<-head(taxa_matrix, 20)
+```
+```{r}
+plot1 <- ggplot(filo$data, aes(fill= fct_reorder(as.factor(Selection), Abundance), x=week, y = Abundance))+
+  geom_bar(stat = "identity", position = "fill")+
+  scale_fill_manual(values = glasbey(n=20)) 
+
+```
+
+
+
+
+#Select the 20 tops OTUs to family taxa level 
+```{r select from taxa and otu table}
+#NOTA: tienes que hacer primero la abundancia realtiva para todo el dataset y luego elegir los 20 primeros clusters asi sabes que se mantiene la proporcianilidad en la grafica. 
+
+otu_20<-head(otu_transposed, 20)
+taxa_20<-head(taxa_matrix, 20)
+```
+```{r insert in phyloseq}
+OTU_1=otu_table(otu_20, taxa_are_rows = TRUE)
+TAX_1=tax_table(taxa_20)
+```
+```{r bind everthing in a table}
+tb_20=phyloseq(OTU_1, TAX_1, SAM)
+```
+```{r barplot family-weeks}
+week_fam<-plot_bar(tb_20, x="week", fill = "family")+
+   geom_bar(stat="identity")+
+  scale_fill_manual(values = glasbey())
+
+week_gen<-plot_bar(tb_20, x="week", fill = "genus")+
+   geom_bar(stat="identity")+
+   scale_fill_manual(values = glasbey())
+
+ week_sp<-plot_bar(tb_20, x="week", fill = "Selection")+
+   geom_bar(stat="identity")+
+   scale_fill_manual(values = glasbey())
+```
+
+```{r relative abundance family-weeks}
+filo<- phyloseq::plot_bar(tb_20, x="week") #Luca gave to me this code
+plot2 <- ggplot(filo$data, aes(fill= fct_reorder(as.factor(family), Abundance), x=week, y = Abundance))+
+  geom_bar(stat = "identity", position = "fill")+
+  scale_fill_manual(values = glasbey(n=20)) 
+plot2
+```
+
+```{r relative abundance genus-weeks}
+filo<- phyloseq::plot_bar(tb_20, x="week") #Luca gave to me this code
+plot3 <- ggplot(filo$data, aes(fill= fct_reorder(as.factor(genus), Abundance), x=week, y = Abundance))+
+  geom_bar(stat = "identity", position = "fill")+
+  scale_fill_manual(values = glasbey(n=20)) 
+plot3
+```
+```{r relative abundance Selection-weeks}
+filo<- phyloseq::plot_bar(tb_20, x="week") #Luca gave to me this code
+plot4 <- ggplot(filo$data, aes(fill= fct_reorder(as.factor(Selection), Abundance), x=week, y = Abundance*100))+
+  geom_bar(stat = "identity", position = "fill")+
+  scale_fill_manual(values = glasbey(n=20)) +
+  scale_y_continuous(name = "Relative abundance", labels = scales::percent)
+ 
+plot4
+```
+
 

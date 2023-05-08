@@ -1,0 +1,958 @@
+---
+title: "Master_thesis_final version with everything"
+author: "Sara Lopez Fernandez"
+date: "2023-05-01"
+output: html_document
+---
+```{r packages}
+library("dplyr")#manage data for plotting
+library("magrittr")#to delete the 0
+library("limma")
+library(tidyverse) # great for averaging data and getting standard error for plotting # great for averaging data and getting standard error for plotting
+library(vegan)
+library(ggplot2)
+library(phyloseq)
+library(pheatmap)#give order to the heatmap
+
+library(factoextra)#for the ordenation
+library(ca)
+
+library(reshape2)#to the heatmap, function melt
+library(pals)#to the colours
+library(plyr)#graph relative abundance reads and OTUs, sumarise
+```
+
+#Outputs 
+##Rarefaction curves
+```{r}
+all_data <- read.table("C:/Users/salz0002/Documents/R/Data with outliers/CommunityData3.csv", header = TRUE, sep = ";")#data for rarefaction
+```
+```{r}
+#compare x and y
+all_data<-all_data %>% na.omit()
+all_otu <- all_data[11:length(all_data)]
+   
+S_all <- specnumber(all_otu)  #observed number of species per sample
+raremax <- min(rowSums(all_otu))
+Srare <- rarefy(all_otu, raremax)
+```
+```{r}
+plot(S_all, Srare, main="Sample", xlab = "Observed No. of Species", ylab = "Rarefied No. of Species")
+```
+```{r}
+rarecurve(aggregate(all_otu, list(all_data$Site), sum)[,-1], xlab = "No. of reads", ylab = "No. of fungal OTUs", col = c("darkgreen", "orange", "red", "blue"), cex = 0.6) #without curve label
+
+rarecurve(sapply(all_otu, function(x) sapply(split(x, all_data$Site), sum)), xlab = "No. of sequences", ylab = "No. of fungal OTUs") #with curve label
+```
+
+##Venn diagram plots
+
+```{r}
+data <- read.table("C:/Users/salz0002/Documents/R/Transdata.csv", header = TRUE, sep = ",") #data without outliers
+data<-data %>% na.omit()
+```
+###Sites and treatment
+```{r Split data based on site}
+##Split the data or sorf data based on site
+G_site <- data[data$Site=="G",]
+g_otu<- subset(G_site, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs, PairY, PairT))
+G_site <- colSums(g_otu)
+
+M1_site <- data[data$Site=="M1",]
+M1_otu<- subset(M1_site, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs,PairY, PairT))
+M1_site <- colSums(M1_otu)
+
+M2_site <- data[data$Site=="M2",]
+M2_otu<- subset(M2_site, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs, PairY, PairT))
+M2_site <- colSums(M2_otu)
+
+#combine the three subdataframes
+df <- cbind(G_site,M1_site,M2_site)
+df <- as.data.frame(df)
+df<-df[rowSums(df) !=0,]
+
+#make binary the dataframe
+G<-replace(df$G_site, df$G_site>0,1)
+M1<-replace(df$M1_site, df$M1_site>0,1)
+M2<-replace(df$M2_site, df$M2_site>0,1)
+
+gsum <-  sum(G) #just to have a look at the number
+m1sum <- sum(M1)
+m2sum <- sum(M2)
+ 
+df2 <- as.data.frame(cbind(G, M1, M2)) #only for 5 sets
+
+#Draw the diagram
+a <- vennCounts(df2)
+
+vennDiagram(a)
+
+##Treatment, natural or planted
+#Split the data or sorf data based on site
+N_treat <- data[data$Treatment=="N",]
+N_otu<- subset(N_treat, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs, PairY, PairT))
+N_treat <- colSums(N_otu)
+
+P_treat <- data[data$Treatment=="P",]
+P_otu<- subset(P_treat, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs, PairY, PairT))
+P_treat <- colSums(P_otu)
+
+#combine the three subdataframes
+df <- cbind(N_treat,P_treat)
+df <- as.data.frame(df)
+df<-df[rowSums(df) !=0,]
+
+#make binary the dataframe
+N<-replace(df$N_treat, df$N_treat>0,1)
+P<-replace(df$P_treat, df$P_treat>0,1)
+Nsum <-  sum(N) #just to have a look at the number
+Psum <- sum(P)
+df2 <- as.data.frame(cbind(N, P)) #only for 5 sets
+
+#Draw the diagram
+b <- vennCounts(df2)
+vennDiagram(b)
+```
+###Needle year
+```{r}
+##Split the data or sorf data based on site
+Y21 <- data[data$Year=="21",]
+Y21_otu<- subset(Y21, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs))
+Y21 <- colSums(Y21_otu)
+
+Y22<- data[data$Year=="22",]
+Y22_otu<- subset(Y22, select=-c(Tag, Site, Sample, Treatment, Year, Info, week, Time_point, reads, OTUs, PairY, PairT))
+Y22 <- colSums(Y22_otu)
+
+#combine the three subdataframes
+library("dplyr")
+df <- cbind(Y21,Y22)
+
+df <- as.data.frame(df)
+
+df<-df[rowSums(df) !=0,]
+
+#make binary the dataframe
+
+Y21<-replace(df$Y21, df$Y21>0,1)
+
+Y22<-replace(df$Y22, df$Y22>0,1)
+
+y21sum <-  sum(Y21) #just to have a look at the number
+
+y22sum <- sum(Y22)
+
+df2 <- as.data.frame(cbind(Y21, Y22)) #only for 5 sets
+
+#Draw the diagram
+library(limma)
+
+c <- vennCounts(df2)
+
+vennDiagram(c)
+```
+
+
+# Distribution over time
+```{r}
+datat <- read.table("C:/Users/salz0002/Documents/R/Data with outliers/CommunityData4(less).csv", header = TRUE, sep = ",")
+
+datat<-datat %>% na.omit()
+datat$Treatment <- as.factor(datat$Treatment)
+datat$Year <- as.factor(datat$Year)
+datat$week <- as.factor(datat$week)
+```
+```{r}
+#G and natural
+G_site <- datat[datat$Site=="G",]##Split the data or sorf data based on site
+g_otu<- subset(G_site, select=-c(Tag, Site, Sample, Info, Time_point))
+g_table<-subset(g_otu, select = -c(6:length(g_otu)))
+
+G_natural <- g_table[g_table$Treatment=="N",]#seleccionar natural
+
+ G_natural2 <-ddply(G_natural[,3:5], .(week), summarize, mean_reads=mean(reads))
+ G_natural3 <-ddply(G_natural[,3:5], .(week), summarize, mean_OTUs=mean(OTUs))
+ G_natural_fancy <- merge(G_natural2, G_natural3)
+ 
+ 
+silly_vector <- rep("N", 8)
+ G_natural_fancy <- cbind(silly_vector, G_natural_fancy)
+```
+```{r}
+totalGN_reads<- sum(G_natural_fancy$mean_reads)#relative abundance for reads
+rel_abundance<- G_natural_fancy$mean_reads/totalGN_reads
+abundance_readsGN<- rel_abundance*100
+
+totalGN_otus<-sum(G_natural_fancy$mean_OTUs)
+otu_abun_GN<- G_natural_fancy$mean_OTUs/totalGN_otus
+otu_GN_per<-otu_abun_GN*100
+
+G_natural_real<-cbind(G_natural_fancy, abundance_readsGN, otu_GN_per)
+```
+
+```{r}
+ggp<-ggplot(G_natural_real)+
+  geom_bar(aes(x=week, y=abundance_readsGN), stat = "identity", fill="cyan",colour="#006000")+
+  geom_point(aes(x=week, y=otu_GN_per),color="red", size=2)+
+  geom_line(aes(x=week, y=otu_GN_per, group=1), stat="identity",color="blue", size=2 )+
+  labs(title = "Relative abundance of natural regenerated seedlings in Gåvstahagen", x="weeks", y ="Relative abundance(%)")
+ggp
+```
+```{r}
+#G and Planted 
+G_plant <- g_table[g_table$Treatment=="P",]
+ G_plant2 <-ddply(G_plant[,3:5], .(week), summarize, mean_reads=mean(reads))
+ G_plant3 <-ddply(G_plant[,3:5], .(week), summarize, mean_OTUs=mean(OTUs))
+ G_plant_fancy <- merge(G_plant2, G_plant3)
+
+silly_vector <- rep("P", 8)
+ G_plant_fancy <- cbind(silly_vector, G_plant_fancy)
+```
+```{r}
+totalGN_reads<- sum(G_plant_fancy$mean_reads)#relative abundance for reads
+rel_abundance<- G_plant_fancy$mean_reads/totalGN_reads
+abundance_readsGN<- rel_abundance*100
+
+totalGN_otus<-sum(G_plant_fancy$mean_OTUs)
+otu_abun_GN<- G_plant_fancy$mean_OTUs/totalGN_otus
+otu_GN_per<-otu_abun_GN*100
+
+G_plant_real<-cbind(G_plant_fancy, abundance_readsGN, otu_GN_per)
+```
+
+```{r}
+ggp<-ggplot(G_plant_real)+
+  geom_bar(aes(x=week, y=abundance_readsGN), stat = "identity", fill="cyan",colour="#006000")+
+  geom_point(aes(x=week, y=otu_GN_per),color="red", size=2)+
+  geom_line(aes(x=week, y=otu_GN_per, group=1), stat="identity",color="blue", size=2 )+
+  labs(title = "Relative abundance of planted regenerated seedlings in Gåvstahagen", x="weeks", y ="Relative abundance(%)")
+ggp
+
+```
+```{r}
+#M1 and N
+M1_site <- datat[datat$Site=="M1",]##Split the data or sorf data based on site
+m1_otu<- subset(M1_site, select=-c(Tag, Site, Sample, Info, Time_point))
+m1_table<-subset(m1_otu, select = -c(6:length(m1_otu)))
+
+M1_natural <- m1_table[m1_table$Treatment=="N",]#seleccionar natural
+
+M1_natural2 <-ddply(M1_natural[,3:5], .(week), summarize, mean_reads=mean(reads))
+M1_natural3 <-ddply(M1_natural[,3:5], .(week), summarize, mean_OTUs=mean(OTUs))
+M1_natural_fancy <- merge(M1_natural2, M1_natural3)
+ 
+silly_vector <- rep("N", 11)
+M1_natural_fancy <- cbind(silly_vector, M1_natural_fancy)
+```
+```{r}
+totalGN_reads<- sum(M1_natural_fancy$mean_reads)#relative abundance for reads
+rel_abundance<- M1_natural_fancy$mean_reads/totalGN_reads
+abundance_readsGN<- rel_abundance*100
+
+totalGN_otus<-sum(M1_natural_fancy$mean_OTUs)
+otu_abun_GN<- M1_natural_fancy$mean_OTUs/totalGN_otus
+otu_GN_per<-otu_abun_GN*100
+
+M1_natural_real<-cbind(M1_natural_fancy, abundance_readsGN, otu_GN_per)
+```
+
+```{r}
+ggp<-ggplot(M1_natural_real)+
+  geom_bar(aes(x=week, y=abundance_readsGN), stat = "identity", fill="cyan",colour="#006000")+
+  geom_point(aes(x=week, y=otu_GN_per),color="red", size=2)+
+  geom_line(aes(x=week, y=otu_GN_per, group=1), stat="identity",color="blue", size=2 )+
+  labs(title = "Relative abundance of natural regenerated seedlings in Marielund 1", x="weeks", y ="Relative abundance(%)")
+ggp
+```
+```{r}
+#M1 and P
+M1_site <- data[data$Site=="M1",]##Split the data or sorf data based on site
+m1_otu<- subset(M1_site, select=-c(Tag, Site, Sample, Info, Time_point))
+m1_table<-subset(m1_otu, select = -c(6:length(m1_otu)))
+
+M1_plant <- m1_table[m1_table$Treatment=="P",]#seleccionar natural
+
+M1_plant2 <-ddply(M1_plant[,3:5], .(week), summarize, mean_reads=mean(reads))
+M1_plant3 <-ddply(M1_plant[,3:5], .(week), summarize, mean_OTUs=mean(OTUs))
+M1_plant_fancy <- merge(M1_plant2, M1_plant3)
+
+silly_vector <- rep("P", 8)
+M1_plant_fancy <- cbind(silly_vector, M1_plant_fancy)
+```
+```{r}
+totalGN_reads<- sum(M1_plant_fancy$mean_reads)#relative abundance for reads
+rel_abundance<- M1_plant_fancy$mean_reads/totalGN_reads
+abundance_readsGN<- rel_abundance*100
+
+totalGN_otus<-sum(M1_plant_fancy$mean_OTUs)
+otu_abun_GN<- M1_plant_fancy$mean_OTUs/totalGN_otus
+otu_GN_per<-otu_abun_GN*100
+
+M1_plant_real<-cbind(M1_plant_fancy, abundance_readsGN, otu_GN_per)
+```
+
+```{r}
+ggp<-ggplot(M1_plant_real)+
+  geom_bar(aes(x=week, y=abundance_readsGN), stat = "identity", fill="cyan",colour="#006000")+
+  geom_point(aes(x=week, y=otu_GN_per),color="red", size=2)+
+  geom_line(aes(x=week, y=otu_GN_per, group=1), stat="identity",color="blue", size=2 )+
+  labs(title = "Relative abundance of planted regenerated seedlings in Marielund 1", x="weeks", y ="Relative abundance(%)")
+ggp
+```
+
+```{r}
+#M2 and P
+M2_site <- datat[datat$Site=="M2",]##Split the data or sorf data based on site
+m2_otu<- subset(M2_site, select=-c(Tag, Site, Sample, Info, Time_point))
+m2_table<-subset(m2_otu, select = -c(6:length(m2_otu)))
+
+M2_plant <- m2_table[m2_table$Treatment=="P",]#seleccionar natural
+
+M2_plant2 <-ddply(M2_plant[,3:5], .(week), summarize, mean_reads=mean(reads))
+ M2_plant3 <-ddply(M2_plant[,3:5], .(week), summarize, mean_OTUs=mean(OTUs))
+ M2_plant_fancy <- merge(M2_plant2, M2_plant3)
+ 
+silly_vector <- rep("P", 7)
+M2_plant_fancy <- cbind(silly_vector, M2_plant_fancy)
+```
+```{r}
+totalGN_reads<- sum(M2_plant_fancy$mean_reads)#relative abundance for reads
+rel_abundance<- M2_plant_fancy$mean_reads/totalGN_reads
+abundance_readsGN<- rel_abundance*100
+
+totalGN_otus<-sum(M2_plant_fancy$mean_OTUs)
+otu_abun_GN<- M2_plant_fancy$mean_OTUs/totalGN_otus
+otu_GN_per<-otu_abun_GN*100
+
+M2_plant_real<-cbind(M2_plant_fancy, abundance_readsGN, otu_GN_per)
+```
+
+```{r}
+ggp<-ggplot(M2_plant_real)+
+  geom_bar(aes(x=week, y=abundance_readsGN), stat = "identity", fill="cyan",colour="#006000")+
+  geom_point(aes(x=week, y=otu_GN_per),color="red", size=2)+
+  geom_line(aes(x=week, y=otu_GN_per, group=1), stat="identity",color="blue", size=2 )+
+  labs(title = "Relative abundance of planted regenerated seedlings in Marielund 2", x="weeks", y ="Relative abundance(%)")
+ggp
+```
+```{r}
+#M2 and N
+M2_site <- datat[datat$Site=="M2",]##Split the data or sorf data based on site
+m2_otu<- subset(M2_site, select=-c(Tag, Site, Sample, Info, Time_point))
+m2_table<-subset(m2_otu, select = -c(6:length(m2_otu)))
+
+M2_natural <- m2_table[m2_table$Treatment=="N",]#seleccionar natural
+
+M2_natural2 <-ddply(M2_natural[,3:5], .(week), summarize, mean_reads=mean(reads))
+ M2_natural3 <-ddply(M2_natural[,3:5], .(week), summarize, mean_OTUs=mean(OTUs))
+ M2_natural_fancy <- merge(M2_natural2, M2_natural3)
+ 
+silly_vector <- rep("P", 9)
+M2_natural_fancy <- cbind(silly_vector, M2_natural_fancy)
+```
+```{r}
+totalGN_reads<- sum(M2_natural_fancy$mean_reads)#relative abundance for reads
+rel_abundance<- M2_natural_fancy$mean_reads/totalGN_reads
+abundance_readsGN<- rel_abundance*100
+
+totalGN_otus<-sum(M2_natural_fancy$mean_OTUs)
+otu_abun_GN<- M2_natural_fancy$mean_OTUs/totalGN_otus
+otu_GN_per<-otu_abun_GN*100
+
+M2_natural_real<-cbind(M2_natural_fancy, abundance_readsGN, otu_GN_per)
+```
+
+```{r}
+ggp<-ggplot(M2_natural_real)+
+  geom_bar(aes(x=week, y=abundance_readsGN), stat = "identity", fill="cyan",colour="#006000")+
+  geom_point(aes(x=week, y=otu_GN_per),color="red", size=2)+
+  geom_line(aes(x=week, y=otu_GN_per, group=1), stat="identity",color="blue", size=2 )+
+  labs(title = "Relative abundance of natural regenerated seedlings in Marielund 2", x="weeks", y ="Relative abundance(%)")
+ggp
+```
+
+
+#CA
+```{r}
+data <- read.table("C:/Users/salz0002/Documents/R/Data with outliers/CommunityData4(less).csv", header = TRUE, sep = ",")
+
+library("magrittr")
+
+data<-data %>% na.omit()
+```
+
+```{r}
+data$Site <- as.factor(data$Site)
+
+data$Treatment <- as.factor(data$Treatment)
+
+data$Year <- as.factor(data$Year)
+
+data$week <- as.factor(data$week)
+
+#str(all_data)
+```
+
+```{r deleting columns with 0}
+n_otu<- data[11:length(data)]
+n_otu2 <- n_otu[, colSums(n_otu != 0) > 0]
+
+final_outliers<-cbind(data[,1:10],n_otu2)
+```
+```{r selecting the variable columns}
+final_outliers<-final_outliers[,-1]
+final_outliers<-final_outliers[,-5]
+final_outliers<-final_outliers[,-6]
+final_outliers<-final_outliers[,-6]
+final_outliers<-final_outliers[,-6]
+```
+```{r getting coordinates for the ca}
+final.ca<-ca(n_otu2, scale.=TRUE)
+ca_dim1 <- fviz_contrib(final.ca, choice="col", axes=2, top = 20)
+ca_dim1[["plot_env"]][["data_sum"]][["name"]]
+ca_dim1
+```
+```{r}
+###Distintas formas de hacer el CA
+ca1<-fviz_ca_row(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+ca2<- fviz_ca_col(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+ca3<-fviz_ca_col(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+ca4<-fviz_ca_biplot(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+ca5<-fviz_ca(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+
+```
+####CA with outliers and labels
+```{r the Ca1 with the outliers}
+ca1_coord.df <- ca1$data
+View(ca1_coord.df)
+
+meta<-final_outliers[, 1:5]
+ca1_df<- cbind(meta,ca1_coord.df)
+
+library(ggplot2)
+library(RColorBrewer)
+
+#Sample
+ca1_sam <- ggplot(ca1_df, aes(x=x, y=y, colour = cos2, label = Sample)) + geom_point() + geom_text(hjust = 0, vjust = 0) + labs(x = "Dim1 (6.3%)", y = "Dim2(5.7%)")
+```
+
+```{r the Ca2 with the outliers otus}
+ca2_coord.df <- ca2$data
+
+#Sample
+ca2_sam <- ggplot(ca2_coord.df, aes(x=x, y=y, colour = cos2, label = name)) + geom_point() + geom_text(hjust = 0, vjust = 0)+ labs(x = "Dim1 (6.3%)", y = "Dim2(5.7%)")
+```
+
+```{r without outliers}
+new_data<-data[-c(48,70),]
+```
+```{r}
+n_otu<- new_data[11:length(new_data)]
+n_otu2 <- n_otu[, colSums(n_otu != 0) > 0]
+
+final<-cbind(new_data[,1:10],n_otu2)
+```
+```{r selecting the variable columns}
+final<-final[,-1]
+final<-final[,-5]
+final<-final[,-6]
+final<-final[,-6]
+final<-final[,-6]
+```
+```{r getting coordinates for the ca}
+final.ca<-ca(n_otu2, scale.=TRUE)
+ca_dim1 <- fviz_contrib(final.ca, choice="col", axes=2, top = 20)
+ca_dim1[["plot_env"]][["data_sum"]][["name"]]
+ca_dim1
+```
+```{r}
+ca6<-fviz_ca_row(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+ca7<- fviz_ca_col(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+
+```
+
+
+###CA without outliers
+```{r without outliers}
+new_data<-data[-c(48,70),]
+```
+```{r}
+n_otu<- new_data[11:length(new_data)]
+n_otu2 <- n_otu[, colSums(n_otu != 0) > 0]
+
+final<-cbind(new_data[,1:10],n_otu2)
+```
+```{r selecting the variable columns}
+final<-final[,-1]
+final<-final[,-5]
+final<-final[,-6]
+final<-final[,-6]
+final<-final[,-6]
+```
+```{r getting coordinates for the ca}
+final.ca<-ca(n_otu2, scale.=TRUE)
+ca_dim1 <- fviz_contrib(final.ca, choice="col", axes=2, top = 20)
+ca_dim1[["plot_env"]][["data_sum"]][["name"]]
+ca_dim1
+```
+```{r}
+ca6<-fviz_ca_row(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+ca7<- fviz_ca_col(final.ca, col.row = "cos2", gradient.col = c("#00AFBB", "#E7B800", "#FC4E07"))
+
+```
+####Final CA without outliers and labels
+```{r select the coordinates to perform the ggplot}
+ca6_coord.df <- ca6$data
+View(ca6_coord.df)
+
+meta<-final[, 1:5]
+ca6_df<- cbind(meta,ca6_coord.df)
+```
+```{r}
+library(ggplot2)
+library(RColorBrewer)
+
+#week
+colors <- rainbow(length(ca6_df$week))
+ca6_week <- ggplot(ca6_df, aes(x=x, y=y, colour = week, label = Sample)) + geom_point() + scale_fill_manual(values = colors) + geom_text(hjust = 0, vjust = 0) + labs(x = "Dim1 (6.3%)", y = "Dim2(5.7%)")
+
+#year
+colors <- rainbow(length(ca6_df$Year))
+ca6_week <- ggplot(ca6_df, aes(x=x, y=y, colour = Year, label = Sample)) + geom_point() + scale_fill_manual(values = colors) + geom_text(hjust = 0, vjust = 0) + labs(x = "Dim1 (6.3%)", y = "Dim2(5.7%)")
+
+#treatment
+colors <- rainbow(length(ca6_df$Treatment))
+ca6_week <- ggplot(ca6_df, aes(x=x, y=y, colour = Treatment, label = Sample)) + geom_point() + scale_fill_manual(values = colors) + geom_text(hjust = 0, vjust = 0) + labs(x = "Dim1 (6.3%)", y = "Dim2(5.7%)")
+
+#site
+colors <- rainbow(length(ca6_df$Site))
+ca6_week <- ggplot(ca6_df, aes(x=x, y=y, colour = Site, label = Sample)) + geom_point() + scale_fill_manual(values = colors) + geom_text(hjust = 0, vjust = 0) + labs(x = "Dim1 (6.3%)", y = "Dim2(5.7%)")
+```
+```{r the Ca2 with the outliers otus}
+ca7_coord.df <- ca7$data
+
+#Sample
+ca7_sam <- ggplot(ca7_coord.df, aes(x=x, y=y, colour = cos2, label = name)) + geom_point() + geom_text(hjust = 0, vjust = 0)+ labs(x = "Dim1 (6.3%)", y = "Dim2(5.7%)")
+```
+
+
+#Histograms-->Normality
+```{r}
+h1<-hist(data$reads)
+
+h2<-hist(data$OTUs)
+```
+##Contraste de hipótesis: normalidad
+```{r}
+shapiro.test(data$OTUs)
+shapiro.test(data$reads)
+```
+##homocedasticidad
+```{r}
+fligner.test(OTUs~Treatment, data)
+
+fligner.test(OTUs~Site, data)
+
+fligner.test(OTUs~Year, data)
+
+fligner.test(OTUs~week, data)
+
+
+fligner.test(reads~Treatment, data)
+
+fligner.test(reads~Site, data)
+
+fligner.test(reads~Year, data)
+
+fligner.test(reads~week, data)###Mis datos son normales y homocedasticos
+##Heterodascity. The variability is equally distributed--> it doesn't matter the value of the residual or the real value.
+```
+
+
+#Diversity analysis
+```{r}
+data <- read.table("C:/Users/salz0002/Documents/R/Transdata.csv", header = TRUE, sep = ",")
+
+n_otu <- data[11:length(data)]
+n_meta <- subset(data[1:10])
+str(n_meta)
+
+n_meta$Treatment <- as.factor(n_meta$Treatment)
+n_meta$Site <- as.factor(n_meta$Site)
+n_meta$week <- as.factor(n_meta$week)
+n_meta$Year <- as.factor(n_meta$Year)
+
+all_data <- cbind(n_meta, n_otu)
+
+
+###Normalised data with read count size.Root square of each OTU per sample
+
+all_data<-cbind(all_data, sqrt(rowSums(n_otu)))
+colnames(all_data)[colnames(all_data) =="sqrt(rowSums(n_otu))"]<- "read.counts"
+```
+##Alfa-diversity
+```{r model with all the variables}
+#alfa-diversty --> Shannon
+shann <- diversity(n_otu, "shannon")
+
+all_data$Shannon<-shann #add a column with the shannon data
+
+###models
+#all the variables
+H<-lm(shann~read.counts+Treatment+Site+Year+week, data = all_data)
+H
+one<- aov(H, data = all_data)
+
+summary(one)
+plot(one)
+```
+```{r post hoc alfa-diversity}
+##pairwise comparation post hoc alfa-diversity para weeks
+pairwise.t.test(shann, all_data$week, p.adj = "bonferroni")#bonferroni es exigente no salen cosas
+TDH<-data.frame(TukeyHSD(one, which = "week", conf.level = 0.95))##este me cae mejor salen signif. 
+```
+###Boxplot alfa-diversity
+```{r}
+bp<-boxplot(Shannon~Treatment, all_data, xlab = "Seedling type",
+   ylab = "Shannon index", main = "Alpha diversity based on seedling type")
+```
+```{r boxplot shannon-treatment}
+St<-boxplot(Shannon ~ Treatment, data = all_data, 
+   xlab = "Seedling type",
+   ylab = "Shannon index", 
+   main = "Alpha diversity based on the seedling type",
+   notch = TRUE, 
+   varwidth = TRUE, 
+   col = c("#00BA42", "#ED8141"))#,names = c("N","P")
+```
+```{r boxplot shannon-site}
+St<-boxplot(Shannon ~ Site, data = all_data, 
+   xlab = "Site",
+   ylab = "Shannon index", 
+   main = "Alpha diversity based on the site",
+   notch = TRUE,
+   varwidth = TRUE, 
+   col = c("#00BA42", "#ED8141", "#BF80FF"))#,names = c("N","P")
+```
+```{rboxplot shannon-year}
+St<-boxplot(Shannon ~ Year, data = all_data, 
+   xlab = "Year",
+   ylab = "Shannon index", 
+   main = "Alpha diversity based on the needle age",
+    notch = TRUE,
+   varwidth = TRUE, 
+   col = c("#00BA42", "#BF80FF"),
+   names = c("Y21","Y22"))
+```
+```{rboxplot shannon-week}
+St<-graphics::boxplot(Shannon ~ week, data = all_data, 
+   xlab = "Weeks",
+   ylab = "Shannon index", 
+   main = "Alpha diversity based on the exposure time",
+   varwidth = TRUE, 
+   col = c("lightgreen"))
+```
+
+
+##Beta diversity
+```{r beta diversity}
+####Beta diversity.
+#I need to transform the data with Hellinger transformation
+library("labdsv")
+hell<-hellinger(n_otu)
+
+#All variable
+bd<-adonis2(hell~read.counts+Treatment+Site+Year+week, data = all_data, method = "bray")
+bd
+summary(bd)
+```
+###Heatmap plot
+```{r Importing taxa and all data files}
+data <- read.table("C:/Users/salz0002/Documents/R/Transdata.csv", header = TRUE, sep = ",")#less OTUs and no outliers
+```
+```{r data preparation}
+#select only the OTUs
+otutb<-data[13:824]
+```
+
+##Paired-wise comparation-->Hannah´s paper
+```{r data}
+data <- read.table("C:/Users/salz0002/Documents/R/Transdata.csv", header = TRUE, sep = ",")
+
+library("magrittr")
+
+data<-data %>% na.omit()
+```
+```{r preparing data as factors}
+data$Site <- as.factor(data$Site)
+data$Treatment <- as.factor(data$Treatment)
+
+data$Year <- as.factor(data$Year)
+
+data$week <- as.factor(data$week)
+
+data$PairT<-as.factor(data$PairT)
+data$PairY<- as.factor(data$PairY)
+```
+```{r adding the read counts in the table}
+n_otu<-data[,13:length(data)]
+data<-cbind(data, sqrt(rowSums(n_otu)))
+colnames(data)[colnames(data) =="sqrt(rowSums(n_otu))"]<- "read.counts"
+meta<-data[,c(3:5,7,9,10,834)]
+```
+*RICHNESS - Hannah's way but applying a lineal model*
+```{r Shannon, alpha diversity}
+tb<- cbind(meta,n_otu)
+
+shanntb <- diversity(tb[,8:828], "shannon")
+```
+
+```{r model with the pair T}
+test1<- aov(shanntb ~ read.counts + PairT, data = tb)
+summary(test1)
+```
+
+```{r Model with the Pair Y}
+test2<- aov(shanntb ~ read.counts + PairY, data = tb)
+summary(test2)
+```
+
+
+#Relative abundance with the taxa (20 tops otus)
+##Ra graph for the Select taxa over weeks
+```{r}
+data <- read.table("C:/Users/salz0002/Documents/R/Rabundance_20topsotu.csv", header = TRUE, sep = ",")
+```
+```{r}
+data$week <- as.factor(data$week)
+```
+```{r}
+dfm= reshape2::melt(data, na.rm = FALSE, value.name = "value")
+```
+```{r color object}
+colours=c("royalblue","brown2", "lightgreen", "magenta","seagreen","chocolate1", "cyan", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
+```
+```{r plot}
+tax20 = ggplot(dfm, aes(x = week, fill = variable, y = value)) + 
+    geom_bar(stat = "identity", colour = "black") + 
+    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
+    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
+    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
+    scale_y_continuous(expand = c(0,0)) + 
+    labs(x = "Weeks", y = "Relative Abundance (%)", fill = "20 most abundant OTUs") + 
+    scale_fill_manual(values = colours)
+    
+```
+
+##Ra graph PairY
+###Gavsta
+```{r}
+G <- read.table("C:/Users/salz0002/Documents/R/Paired sample design/G_PairY_RA.csv", header = TRUE, sep = ",")
+
+G<-G[, 2:length(G)]
+```
+```{r}
+G$OTUs <- factor(G$OTUs, levels=G$OTUs)
+```
+```{r}
+dfm= melt(G, na.rm = FALSE, value.name = "value")
+```
+
+
+```{r}
+colours=c("royalblue","brown2", "lightgreen", "magenta","seagreen","chocolate1", "cyan", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
+```
+
+```{r}
+tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) + 
+    geom_bar(stat = "identity", colour = "black")+
+    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
+    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
+    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
+    scale_y_continuous(expand = c(0,0)) + 
+    labs(x = "Pair year over time", y = "Relative Abundance (%)", fill = "20 most abundant OTUs") + 
+    scale_fill_manual(values = colours)+
+    ggtitle("Gåvstahagen- Paired samples based on needle age")
+```
+###M1
+```{r}
+M1 <- read.table("C:/Users/salz0002/Documents/R/Paired sample design/M1_PairY_RA.csv", header = TRUE, sep = ",")
+
+M1<-M1[, 2:length(M1)]
+```
+```{r}
+M1$OTUs <- factor(M1$OTUs, levels=M1$OTUs)
+```
+```{r}
+dfm= melt(M1, na.rm = FALSE, value.name = "value")
+```
+
+
+```{r}
+colours=c("royalblue","brown2", "lightgreen", "magenta","seagreen","chocolate1", "cyan", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
+```
+
+```{r}
+tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) + 
+    geom_bar(stat = "identity", colour = "black")+
+    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
+    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
+    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
+    scale_y_continuous(expand = c(0,0)) + 
+    labs(x = "Pair year over time", y = "Relative Abundance (%)", fill = "20 most abundant OTUs") + 
+    scale_fill_manual(values = colours)+
+    ggtitle("Marielund 1- Paired samples based on needle age")
+   
+```
+###M2
+```{r}
+M2 <- read.table("C:/Users/salz0002/Documents/R/Paired sample design/M2_PairY_RA.csv", header = TRUE, sep = ",")
+
+M2<-M2[, 2:length(M2)]
+```
+```{r}
+M2$OTUs <- factor(M2$OTUs, levels=M2$OTUs)
+```
+```{r}
+dfm= melt(M2, na.rm = FALSE, value.name = "value")
+```
+
+
+```{r}
+colours=c("royalblue","brown2", "lightgreen", "magenta","seagreen","chocolate1", "cyan", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
+```
+
+```{r}
+tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) + 
+    geom_bar(stat = "identity", colour = "black")+
+    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
+    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
+    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
+    scale_y_continuous(expand = c(0,0)) + 
+    labs(x = "Pair year over time", y = "Relative Abundance (%)", fill = "20 most abundant OTUs") + 
+    scale_fill_manual(values = colours)+
+  ggtitle("Marielund 2-  Paired samples based on needle age")
+   
+```
+
+##Ra graph PairTreatment 
+##Gavsta 
+
+```{r}
+G <- read.table("C:/Users/salz0002/Documents/R/Paired sample design/G_PairT.Porcenta.csv", header = TRUE, sep = ",")
+```
+```{r}
+G$OTUs <- factor(G$OTUs, levels=G$OTUs)
+```
+```{r}
+dfm= melt(G, na.rm = FALSE, value.name = "value")
+```
+
+
+```{r}
+colours=c("royalblue","brown2", "lightgreen", "magenta","seagreen","chocolate1", "cyan", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
+```
+
+```{r}
+tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) + 
+    geom_bar(stat = "identity", colour = "black")+
+    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
+    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
+    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
+    scale_y_continuous(expand = c(0,0)) + 
+    labs(x = "Pair treatment over time", y = "Relative Abundance (%)", fill = "20 most abundance OTUs") + 
+    scale_fill_manual(values = colours)+
+  ggtitle("Gåvstahagen- Paired samples based on seedling type")
+```
+##M1
+```{r}
+M1 <- read.table("C:/Users/salz0002/Documents/R/Paired sample design/M1_PairT.Porcenta.csv", header = TRUE, sep = ",")
+```
+```{r}
+M1$OTUs <- factor(M1$OTUs, levels=M1$OTUs)
+```
+```{r}
+dfm= melt(M1, na.rm = FALSE, value.name = "value")
+```
+
+
+```{r}
+colours=c("royalblue","brown2", "lightgreen", "magenta","seagreen","chocolate1", "cyan", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
+```
+
+```{r}
+tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) + 
+    geom_bar(stat = "identity", colour = "black")+
+    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
+    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
+    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
+    scale_y_continuous(expand = c(0,0)) + 
+    labs(x = "Pair treatment over time", y = "Relative Abundance (%)", fill = "20 most abundance OTUs") + 
+    scale_fill_manual(values = colours)+
+  ggtitle("Marielund 1- Paired samples based on seedling type")
+   
+```
+##M2
+```{r}
+M2 <- read.table("C:/Users/salz0002/Documents/R/Paired sample design/M2_PairT.Porcenta.csv", header = TRUE, sep = ",")
+```
+```{r}
+M2$OTUs <- factor(M2$OTUs, levels=M2$OTUs)
+```
+```{r}
+dfm= melt(M2, na.rm = FALSE, value.name = "value")
+```
+
+
+```{r}
+colours=c("royalblue","brown2", "lightgreen", "magenta","seagreen","chocolate1", "cyan", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
+```
+
+```{r}
+tax20 = ggplot(dfm, aes(x = OTUs, fill = variable, y = value)) + 
+    geom_bar(stat = "identity", colour = "black")+
+    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
+    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
+    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
+    scale_y_continuous(expand = c(0,0)) + 
+    labs(x = "Pair treatment over time", y = "Relative Abundance (%)", fill = "20 most abundance OTUs") + 
+    scale_fill_manual(values = colours)+
+  ggtitle("Marilund 2- Paired samples based on seedling type")
+
+   
+```
+
+##Lifestyles over time
+```{r}
+dt <- read.table("C:/Users/salz0002/Documents/R/Lifestyle_relativeabundances.csv", header = TRUE, sep = ",")
+```
+```{r}
+dt$Weeks <- factor(dt$Weeks, levels=dt$Weeks)
+```
+```{r}
+dfm= melt(dt, na.rm = FALSE, value.name = "value")
+```
+
+```{r}
+colours=c("royalblue","cyan", "lightgreen", "magenta","seagreen","chocolate1", "plum4", "slategray4", "darkgoldenrod2", "darkmagenta", "plum", "snow", "olivedrab", "lightsalmon","lightsalmon4", "lightblue","slateblue", "plum4", "wheat3", "blue", "yellow", "slategray4")
+```
+
+```{r}
+tax20 = ggplot(dfm, aes(x = Weeks, fill = variable, y = value)) + 
+    geom_bar(stat = "identity", colour = "black")+
+    theme(axis.text.x = element_text(angle = 90, size = 14, colour = "black", vjust = 0.5, hjust = 1, face= "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"),  axis.title.x = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16, face = "bold"),     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(),
+    legend.text = element_text(size = 12, face = "bold", colour = "black"), 
+    axis.text.y = element_text(colour = "black", size = 12, face = "bold")) + 
+    scale_y_continuous(expand = c(0,0)) + 
+    labs(x = "Lifest over time", y = "Relative Abundance (%)", fill = "Lifestyles") + 
+    scale_fill_manual(values = colours)
+```
+
